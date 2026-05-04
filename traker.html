@@ -34,15 +34,16 @@
         .workout-table { max-height: 55vh; overflow-y: auto; min-height: 200px; }
         .exercise-block { background: #1b1f2c; border-radius: 14px; margin-bottom: 12px; overflow: hidden; }
         .exercise-header { background: #2a2f40; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; }
-        .order-number { background: #ff7b2c; color: #0a0c12; width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; margin-right: 12px; font-size: 16px; transition: 0.1s; }
-        .order-number:hover { background: #ff9f5c; transform: scale(1.05); }
-        .exercise-title { flex: 1; font-weight: 500; }
-        .remove-exercise-btn { background: #ff5c5c; padding: 4px 10px; border-radius: 20px; font-size: 11px; width: auto; cursor: pointer; }
+        .order-number { background: #ff7b2c; color: #0a0c12; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; margin-right: 10px; font-size: 14px; }
+        .exercise-title { flex: 1; font-size: 14px; font-weight: 500; }
+        .remove-exercise-btn { background: #ff5c5c; padding: 4px 8px; border-radius: 20px; font-size: 10px; width: auto; cursor: pointer; }
         .exercise-sets { padding: 10px; }
-        .set-header { display: grid; grid-template-columns: 40px 1fr 1fr 1fr 35px; gap: 6px; padding: 6px; font-size: 11px; color: #9ba1bc; margin-bottom: 4px; }
-        .set-row { display: grid; grid-template-columns: 40px 1fr 1fr 1fr 35px; gap: 6px; align-items: center; margin-bottom: 6px; padding: 6px; background: #1e2332; border-radius: 10px; }
-        .set-input { background: #2a2f40; border: none; padding: 8px 4px; border-radius: 8px; color: white; text-align: center; font-size: 12px; }
-        .delete-set-btn { background: none; border: none; color: #ff7b5c; font-size: 18px; cursor: pointer; padding: 0; width: auto; }
+        .set-header { display: grid; grid-template-columns: 30px 70px 60px 50px 28px; gap: 4px; padding: 4px; font-size: 10px; color: #9ba1bc; margin-bottom: 4px; }
+        .set-row { display: grid; grid-template-columns: 30px 70px 60px 50px 28px; gap: 4px; align-items: center; margin-bottom: 6px; padding: 5px; background: #1e2332; border-radius: 10px; }
+        .set-label { font-size: 11px; text-align: center; }
+        .set-input { background: #2a2f40; border: none; padding: 8px 0; border-radius: 8px; color: white; text-align: center; font-size: 12px; width: 100%; }
+        .set-input option { font-size: 11px; }
+        .delete-set-btn { background: none; border: none; color: #ff7b5c; font-size: 16px; cursor: pointer; padding: 0; width: auto; }
         .add-set-btn { margin-top: 8px; padding: 8px; font-size: 12px; }
         .history-day { background: #1b1f2c; border-radius: 16px; margin-bottom: 14px; overflow: hidden; }
         .history-day-header { background: #2a2f40; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
@@ -66,6 +67,11 @@
         .add-exercise-picker-btn { background: #ff7b2c; padding: 6px 12px; width: auto; font-size: 12px; }
         .number-input-modal { display: flex; gap: 10px; margin-top: 15px; }
         .number-input-modal input { flex: 1; padding: 12px; background: #1e2332; border: 1px solid #2f3548; border-radius: 14px; color: white; font-size: 18px; text-align: center; }
+        @media (max-width: 500px) {
+            .set-header { grid-template-columns: 28px 65px 55px 45px 28px; gap: 3px; }
+            .set-row { grid-template-columns: 28px 65px 55px 45px 28px; gap: 3px; }
+            .set-input { font-size: 11px; padding: 6px 0; }
+        }
     </style>
 </head>
 <body>
@@ -85,7 +91,7 @@
             <div id="exercisesContainer" class="workout-table"></div>
             <div class="calories-input">
                 <label style="font-size:12px;">🔥 Ккал (можно сумму: 1000+200)</label>
-                <input type="text" id="caloriesInput" placeholder="Например: 1000+200 или 500" style="width:100%; padding:10px; background:#1e2332; border-radius:14px; border:1px solid #2f3548; color:white; margin-top:5px;">
+                <input type="text" id="caloriesInput" placeholder="Например: 1000+200" style="width:100%; padding:10px; background:#1e2332; border-radius:14px; border:1px solid #2f3548; color:white; margin-top:5px;">
             </div>
             <button id="saveAllWorkoutsBtn" style="margin-top: 6px;">💾 Сохранить тренировку</button>
         </div>
@@ -218,7 +224,7 @@
     }
 
     function loadData() {
-        const saved = localStorage.getItem('iron_tracker_v12');
+        const saved = localStorage.getItem('iron_tracker_v13');
         if(saved) {
             try {
                 const p = JSON.parse(saved);
@@ -266,7 +272,7 @@
             gender: document.getElementById('userGender').value,
             age: document.getElementById('userAge').value
         };
-        localStorage.setItem('iron_tracker_v12', JSON.stringify({
+        localStorage.setItem('iron_tracker_v13', JSON.stringify({
             trainingHistory, customExercises, bodyWeightHistory, nextId, userProfile
         }));
     }
@@ -318,11 +324,11 @@
                         <div class="order-number" data-exercise="${exercise}">${idx + 1}</div>
                         <div class="exercise-title">${exercise}</div>
                     </div>
-                    <button class="remove-exercise-btn" data-exercise="${exercise}">🗑 Убрать</button>
+                    <button class="remove-exercise-btn" data-exercise="${exercise}">🗑</button>
                 </div>
                 <div class="exercise-sets">
                     <div class="set-header">
-                        <span>№</span><span>Вес</span><span>Повт</span><span>Усилие</span><span></span>
+                        <span>№</span><span>Вес</span><span>Повт</span><span>Усил</span><span></span>
                     </div>
                     ${sets.map((set, setIdx) => `
                         <div class="set-row">
@@ -330,7 +336,7 @@
                             <input type="number" class="set-input" data-ex="${exercise}" data-idx="${setIdx}" data-field="weight" value="${set.weight}" step="2.5" placeholder="кг">
                             <input type="number" class="set-input" data-ex="${exercise}" data-idx="${setIdx}" data-field="reps" value="${set.reps}" placeholder="раз">
                             <select class="set-input" data-ex="${exercise}" data-idx="${setIdx}" data-field="effort">
-                                ${[1,2,3,4,5,6,7,8,9,10].map(e => `<option value="${e}" ${set.effort==e?'selected':''}>${e} ${e>=8?'🔥':e<=3?'💀':'💪'}</option>`).join('')}
+                                ${[1,2,3,4,5,6,7,8,9,10].map(e => `<option value="${e}" ${set.effort==e?'selected':''}>${e}</option>`).join('')}
                             </select>
                             <button class="delete-set-btn" data-ex="${exercise}" data-idx="${setIdx}">✕</button>
                         </div>
@@ -345,7 +351,6 @@
             container.innerHTML = '<div style="text-align:center; padding:30px; color:#6a6f87;">Нет упражнений. Нажмите «➕ Упр.» чтобы добавить</div>';
         }
         
-        // Обработчики для изменения порядка (клик на цифру)
         document.querySelectorAll('.order-number').forEach(elem => {
             elem.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -399,7 +404,6 @@
         });
     }
 
-    // Изменение порядка через номер
     document.getElementById('confirmOrderBtn')?.addEventListener('click', () => {
         const newPosition = parseInt(document.getElementById('orderNumberInput').value);
         if(!currentOrderExercise || isNaN(newPosition)) {
@@ -454,8 +458,8 @@
             const div = document.createElement('div');
             div.className = 'exercise-picker-item';
             div.innerHTML = `
-                <span>${exercise} ${hasSets ? '✓ (уже есть)' : ''}</span>
-                <button class="add-exercise-picker-btn" data-exercise="${exercise}">+ Добавить</button>
+                <span>${exercise} ${hasSets ? '✓' : ''}</span>
+                <button class="add-exercise-picker-btn" data-exercise="${exercise}">+</button>
             `;
             pickerContainer.appendChild(div);
         });
@@ -534,7 +538,7 @@
             dayDiv.innerHTML = `
                 <div class="history-day-header">
                     <span>📅 ${formatDateToDMY(date)} ${caloriesTotal ? `🔥 ${caloriesTotal} ккал` : ''}</span>
-                    <button class="delete-day-btn" data-date="${date}">🗑 Удалить день</button>
+                    <button class="delete-day-btn" data-date="${date}">🗑 День</button>
                 </div>
                 <div id="day-${date.replace(/-/g,'')}"></div>
             `;
@@ -544,12 +548,12 @@
                 const exDiv = document.createElement('div');
                 exDiv.className = 'history-exercise';
                 let setsHtml = '<div class="history-sets-list">';
-                entry.sets.forEach(set => { setsHtml += `<div class="history-set-item">▪️ ${set.weight} кг × ${set.reps} повтор. (💪${set.effort}/10)</div>`; });
+                entry.sets.forEach(set => { setsHtml += `<div class="history-set-item">▪️ ${set.weight} кг × ${set.reps} (💪${set.effort})</div>`; });
                 setsHtml += '</div>';
                 exDiv.innerHTML = `
                     <div style="display:flex; justify-content:space-between;">
                         <strong>${entry.exercise}</strong>
-                        <button class="delete-exercise-btn-hist" data-id="${entry.id}">Удалить</button>
+                        <button class="delete-exercise-btn-hist" data-id="${entry.id}">🗑</button>
                     </div>
                     ${setsHtml}
                 `;
@@ -603,14 +607,14 @@
         const exercises = Object.keys(lastSetByExercise);
         const values = exercises.map(ex => lastSetByExercise[ex].value);
         
-                if(chart3) chart3.destroy();
+        if(chart3) chart3.destroy();
         if(exercises.length > 0) {
             chart3 = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: exercises,
                     datasets: [{
-                        label: 'Вес (кг) - последний подход',
+                        label: 'Вес (кг)',
                         data: values,
                         backgroundColor: '#ff7b2c',
                         borderColor: '#ff9f5c',
@@ -640,7 +644,7 @@
                             ticks: { color: '#eef2ff' } 
                         },
                         x: { 
-                            ticks: { color: '#eef2ff', maxRotation: 45, minRotation: 45 } 
+                            ticks: { color: '#eef2ff', maxRotation: 45, minRotation: 45, font: { size: 11 } } 
                         }
                     }
                 }
@@ -689,8 +693,8 @@
                                 tension: 0.2,
                                 pointBackgroundColor: '#ff7b2c',
                                 pointBorderColor: '#0a0c12',
-                                pointRadius: 5,
-                                pointHoverRadius: 7
+                                pointRadius: 4,
+                                pointHoverRadius: 6
                             }] 
                         }, 
                         options: { 
@@ -705,7 +709,7 @@
                             },
                             scales: { 
                                 y: { title: { display: true, text: '1ПМ (кг)', color: '#9ba1bc' }, grid: { color: '#2a2f40' }, ticks: { color: '#eef2ff' } },
-                                x: { ticks: { color: '#eef2ff', maxRotation: 45, minRotation: 45 } } 
+                                x: { ticks: { color: '#eef2ff', maxRotation: 45, minRotation: 45, font: { size: 11 } } } 
                             } 
                         } 
                     });
@@ -733,7 +737,7 @@
                             tension: 0.2,
                             pointBackgroundColor: '#4c9aff',
                             pointBorderColor: '#0a0c12',
-                            pointRadius: 5
+                            pointRadius: 4
                         }] 
                     }, 
                     options: { 
@@ -741,7 +745,7 @@
                         maintainAspectRatio: true,
                         scales: { 
                             y: { title: { display: true, text: 'Вес (кг)', color: '#9ba1bc' }, grid: { color: '#2a2f40' }, ticks: { color: '#eef2ff' } },
-                            x: { ticks: { color: '#eef2ff', maxRotation: 45, minRotation: 45 } } 
+                            x: { ticks: { color: '#eef2ff', maxRotation: 45, minRotation: 45, font: { size: 11 } } } 
                         } 
                     } 
                 });
@@ -829,7 +833,7 @@
     document.getElementById('copyJsonBtn')?.addEventListener('click', async () => {
         try {
             await navigator.clipboard.writeText(JSON.stringify(getExportData(), null, 2));
-            alert('✅ JSON скопирован! Вставьте в ChatGPT или Qwen');
+            alert('✅ JSON скопирован!');
         } catch(err) {
             alert('Не удалось скопировать');
         }
@@ -841,7 +845,7 @@
             if(!last[w.exercise]) last[w.exercise] = w; 
         });
         
-        let text = '📊 Рекомендации на основе последних тренировок:\n';
+        let text = '📊 Рекомендации:\n';
         let hasData = false;
         
         for(let ex in last) {
@@ -850,14 +854,14 @@
             let lastSet = w.sets[w.sets.length - 1];
             let avgReps = w.sets.reduce((s,set)=>s+set.reps,0)/w.sets.length;
             text += `\n🏋️ ${ex} (${formatDateToDMY(w.date)}):\n`;
-            text += `   • Последний подход: ${lastSet.weight} кг × ${lastSet.reps} повтор.\n`;
-            if(avgReps >= 10) text += `   • ✅ Рекомендация: добавь +2.5-5 кг, делай 6-8 повторений\n`;
-            else if(avgReps >= 6) text += `   • ✅ Рекомендация: можно добавить +2.5 кг или +1 повтор\n`;
-            else text += `   • ⚠️ Рекомендация: снизь вес на 5-10%, работай в диапазоне 8-12 повторений\n`;
+            text += `   • Последний: ${lastSet.weight} кг × ${lastSet.reps} (💪${lastSet.effort})\n`;
+            if(avgReps >= 10) text += `   • ✅ Добавь +2.5-5 кг, делай 6-8 повторов\n`;
+            else if(avgReps >= 6) text += `   • ✅ Можно добавить +2.5 кг или +1 повтор\n`;
+            else text += `   • ⚠️ Снизь вес на 5-10%, работай 8-12 повторов\n`;
         }
         
         if(!hasData) {
-            text = 'Нет данных о тренировках. Добавьте хотя бы одну тренировку, чтобы получить рекомендации.';
+            text = 'Нет данных. Добавьте тренировки!';
         }
         
         document.getElementById('adviceOutput').innerHTML = text;
