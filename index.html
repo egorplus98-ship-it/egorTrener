@@ -636,10 +636,38 @@
         container.innerHTML='';
         let workoutExercises=customExercises.filter(ex=>currentWorkout[ex]?.length);
         workoutExercises.forEach((exercise,idx)=>{
-            let sets=currentWorkout[exercise];
-            let block=document.createElement('div');block.className='exercise-block';
-            block.innerHTML = `<div class="exercise-header">
+           let sets = currentWorkout[exercise];
+let block = document.createElement('div');
+block.className = 'exercise-block';
+block.innerHTML = `<div class="exercise-header">
     <div>
+        <span class="order-number" data-exercise="${exercise}">${idx + 1}</span>
+        <b>${exercise}</b>
+    </div>
+    <button class="small-delete" data-exercise="${exercise}">🗑</button>
+</div>
+<div class="exercise-sets">
+    <div class="set-header">
+        <span>№</span>
+        <span>Вес</span>
+        <span>Тип</span>
+        <span>Повт</span>
+        <span></span>
+    </div>
+    ${sets.map((s, i) => `
+        <div class="set-row">
+            <span>${i + 1}</span>
+            <input class="set-input" value="${s.weight}" data-ex="${exercise}" data-idx="${i}" data-field="weight">
+            <select class="weight-type-select" data-ex="${exercise}" data-idx="${i}" data-field="type">
+                <option ${s.type === 'kg' ? 'selected' : ''}>кг</option>
+                <option ${s.type === 'bw' ? 'selected' : ''}>Свой вес</option>
+            </select>
+            <input class="set-input" value="${s.reps}" data-ex="${exercise}" data-idx="${i}" data-field="reps">
+            <button class="delete-set-btn" data-ex="${exercise}" data-idx="${i}">✕</button>
+        </div>
+    `).join('')}
+    <button class="add-set-btn secondary" data-exercise="${exercise}">+ Подход</button>
+</div>`;
         <span class="order-number" data-exercise="${exercise}">${idx + 1}</span>
         <b>${exercise}</b>
     </div>
