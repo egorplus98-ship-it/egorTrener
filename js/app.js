@@ -2,7 +2,7 @@ import { auth, db, syncToCloud, loadFromCloud } from './firebase-sync.js';
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 import { 
     trainingHistory, customExercises, bodyWeightHistory, nextId, 
-    initCurrentWorkout, getOrderedWorkoutExercises 
+    initCurrentWorkout, getOrderedWorkoutExercises, currentWorkout 
 } from './training-logic.js';
 import { formatDateToDMY, getToday, parseCalories } from './utils.js';
 import { 
@@ -17,7 +17,11 @@ const charts = new Charts();
 
 // Инициализация приложения
 function initApp() {
-    window.currentWorkout = window.currentWorkout || {};
+    // Правильная инициализация глобальной переменной
+    if (!window.currentWorkout) {
+        window.currentWorkout = currentWorkout;
+    }
+    
     initCurrentWorkout();
     renderExerciseManageList();
     renderExercises();
