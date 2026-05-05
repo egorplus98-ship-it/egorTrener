@@ -1,10 +1,10 @@
-﻿import { auth, db, syncToCloud, loadFromCloud } from './firebase-sync.js';
+import { auth, db, syncToCloud, loadFromCloud } from './firebase-sync.js';
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 import { 
     trainingHistory, customExercises, bodyWeightHistory, nextId, 
     initCurrentWorkout, getOrderedWorkoutExercises 
 } from './training-logic.js';
-import { formatDateToDMY, getToday, parseCalories, generateRepOptions, generateEffortOptions } from './utils.js';
+import { formatDateToDMY, getToday, parseCalories } from './utils.js';
 import { 
     renderExerciseManageList, renderExercises, renderHistory, 
     updateWeightHistoryList, setupOrderModal 
@@ -17,15 +17,16 @@ const charts = new Charts();
 
 // Инициализация приложения
 function initApp() {
+    window.currentWorkout = window.currentWorkout || {};
     initCurrentWorkout();
     renderExerciseManageList();
     renderExercises();
     renderHistory();
     updateWeightHistoryList();
     setupOrderModal();
-    document.getElementById('workoutDate').value = getToday();
+    const today = new Date().toISOString().slice(0, 10);
+    document.getElementById('workoutDate').value = today;
     
-    // Настройка обработчиков
     setupEventListeners();
 }
 
@@ -56,11 +57,14 @@ function setupEventListeners() {
     // Сохранение тренировки
     document.getElementById('saveAllWorkoutsBtn')?.addEventListener('click', async () => {
         const selectedDate = document.getElementById('workoutDate').value;
-        if (!selectedDate) { alert("Выберите дату"); return; }
+        if (!selectedDate) { 
+            alert("Выберите дату"); 
+            return; 
+        }
         
         let savedCount = 0;
         for (let exercise of customExercises) {
-            const sets = window.currentWorkout ? window.currentWorkout[exercise] : [];
+            const sets = window.currentWorkout[exercise];
             if (sets && sets.length > 0) {
                 trainingHistory.push({
                     id: nextId++,
@@ -75,7 +79,7 @@ function setupEventListeners() {
                     calories: null
                 });
                 savedCount++;
-                if (window.currentWorkout) window.currentWorkout[exercise] = [];
+                window.currentWorkout[exercise] = [];
             }
         }
         
@@ -95,25 +99,25 @@ function setupEventListeners() {
             if (window.currentUser) await syncToCloud(window.currentUser.uid, {
                 trainingHistory, customExercises, bodyWeightHistory, nextId
             });
-            alert(`✅ Сохранено ${savedCount} упражнений!`);
+            alert(`Сохранено ${savedCount} упражнений`);
         } else { 
             alert("Нет подходов"); 
         }
     });
 
-    // Добавление упражнения
+    // Добавление упражнения через модальное окно
     document.getElementById('addExerciseFromModalBtn')?.addEventListener('click', async () => {
         const newEx = document.getElementById('newExerciseNameInput').value.trim();
         if (newEx && !customExercises.includes(newEx)) {
             customExercises.push(newEx);
-            if (window.currentWorkout) window.currentWorkout[newEx] = [];
+            window.currentWorkout[newEx] = [];
             renderExerciseManageList();
             renderExercises();
             if (window.currentUser) await syncToCloud(window.currentUser.uid, {
                 trainingHistory, customExercises, bodyWeightHistory, nextId
             });
             document.getElementById('newExerciseNameInput').value = '';
-            alert(`✅ Упражнение "${newEx}" добавлено!`);
+            alert(`Упражнение "${newEx}" добавлено`);
         } else if (newEx) { 
             alert('Такое упражнение уже есть'); 
         } else {
@@ -151,7 +155,7 @@ function setupEventListeners() {
         const exportData = { profile, exercises: customExercises, bodyWeight: bodyWeightHistory, workouts: trainingHistory };
         try {
             await navigator.clipboard.writeText(JSON.stringify(exportData, null, 2));
-            alert('✅ JSON скопирован!');
+            alert('JSON скопирован');
         } catch(err) {
             alert('Не удалось скопировать');
         }
@@ -164,7 +168,7 @@ function setupEventListeners() {
             if (!last[w.exercise]) last[w.exercise] = w;
         });
         
-        let text = '📊 Рекомендации:\n';
+        let text = 'Рекомендации\n';
         let hasData = false;
         
         for (let ex in last) {
@@ -173,14 +177,14 @@ function setupEventListeners() {
             let lastSet = w.sets[w.sets.length - 1];
             let avgReps = w.sets.reduce((s, set) => s + set.reps, 0) / w.sets.length;
             const weightDisplay = lastSet.weightType === 'bw' ? 'Свой вес' : `${lastSet.weight} кг`;
-            text += `\n🏋️ ${ex} (${formatDateToDMY(w.date)}):\n`;
-            text += `   • Последний: ${weightDisplay} × ${lastSet.reps} (💪${lastSet.effort})\n`;
-            if (avgReps >= 10) text += `   • ✅ Добавь +2.5-5 кг, делай 6-8 повторов\n`;
-            else if (avgReps >= 6) text += `   • ✅ Можно добавить +2.5 кг или +1 повтор\n`;
-            else text += `   • ⚠️ Снизь вес на 5-10%, работай 8-12 повторов\n`;
+            text += `\n${ex} (${formatDateToDMY(w.date)})\n`;
+            text += `   Последний: ${weightDisplay} x ${lastSet.reps} (усилие ${lastSet.effort})\n`;
+            if (avgReps >= 10) text += `   Добавь +2.5-5 кг, делай 6-8 повторов\n`;
+            else if (avgReps >= 6) text += `   Можно добавить +2.5 кг или +1 повтор\n`;
+            else text += `   Снизь вес на 5-10%, работай 8-12 повторов\n`;
         }
         
-        if (!hasData) text = 'Нет данных. Добавьте тренировки!';
+        if (!hasData) text = 'Нет данных. Добавьте тренировки';
         document.getElementById('adviceOutput').innerHTML = text;
     });
 
@@ -190,8 +194,43 @@ function setupEventListeners() {
             await syncToCloud(window.currentUser.uid, {
                 trainingHistory, customExercises, bodyWeightHistory, nextId
             });
-            alert('Синхронизация завершена!');
+            alert('Синхронизация завершена');
         }
+    });
+
+    // Показать пикер упражнений
+    window.showExercisePicker = function() {
+        const pickerContainer = document.getElementById('exercisePickerList');
+        pickerContainer.innerHTML = '';
+        customExercises.forEach(exercise => {
+            const hasSets = window.currentWorkout[exercise] && window.currentWorkout[exercise].length > 0;
+            const div = document.createElement('div');
+            div.className = 'exercise-picker-item';
+            div.innerHTML = `<span>${exercise} ${hasSets ? 'есть' : ''}</span><button class="add-exercise-picker-btn" data-exercise="${exercise}">Добавить</button>`;
+            pickerContainer.appendChild(div);
+        });
+        document.querySelectorAll('.add-exercise-picker-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const exercise = btn.dataset.exercise;
+                if (!window.currentWorkout[exercise]) {
+                    window.currentWorkout[exercise] = [];
+                }
+                if (window.currentWorkout[exercise].length === 0) {
+                    window.currentWorkout[exercise].push({ weight: 60, weightType: 'kg', reps: 8, effort: 7 });
+                }
+                renderExercises();
+                document.getElementById('exercisePickerModal').style.display = 'none';
+            });
+        });
+        document.getElementById('exercisePickerModal').style.display = 'flex';
+    };
+    
+    document.getElementById('showExercisePickerBtn')?.addEventListener('click', () => {
+        window.showExercisePicker();
+    });
+    
+    document.getElementById('closePickerBtn')?.addEventListener('click', () => {
+        document.getElementById('exercisePickerModal').style.display = 'none';
     });
 
     // Переключение вкладок
@@ -256,39 +295,6 @@ function setupEventListeners() {
         bicepIcon.style.animation = 'none';
         setTimeout(() => bicepIcon.style.animation = 'flexBicep 1s ease infinite', 10);
     });
-    
-    // Показ пикера упражнений
-    window.showExercisePicker = function() {
-        const pickerContainer = document.getElementById('exercisePickerList');
-        pickerContainer.innerHTML = '';
-        customExercises.forEach(exercise => {
-            const hasSets = window.currentWorkout && window.currentWorkout[exercise] && window.currentWorkout[exercise].length > 0;
-            const div = document.createElement('div');
-            div.className = 'exercise-picker-item';
-            div.innerHTML = `<span>${exercise} ${hasSets ? '✓' : ''}</span><button class="add-exercise-picker-btn" data-exercise="${exercise}">+</button>`;
-            pickerContainer.appendChild(div);
-        });
-        document.querySelectorAll('.add-exercise-picker-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const exercise = btn.dataset.exercise;
-                if (!window.currentWorkout) window.currentWorkout = {};
-                if (!window.currentWorkout[exercise]) window.currentWorkout[exercise] = [];
-                if (window.currentWorkout[exercise].length === 0) {
-                    window.currentWorkout[exercise].push({ weight: 60, weightType: 'kg', reps: 8, effort: 7 });
-                }
-                renderExercises();
-                document.getElementById('exercisePickerModal').style.display = 'none';
-            });
-        });
-        document.getElementById('exercisePickerModal').style.display = 'flex';
-    };
-    
-    document.getElementById('showExercisePickerBtn')?.addEventListener('click', () => {
-        window.showExercisePicker();
-    });
-    document.getElementById('closePickerBtn')?.addEventListener('click', () => {
-        document.getElementById('exercisePickerModal').style.display = 'none';
-    });
 }
 
 // Загрузка данных пользователя из облака
@@ -301,9 +307,9 @@ async function loadUserData() {
         customExercises.push(...(data.customExercises || ["Жим лёжа", "Присед", "Становая тяга", "Тяга штанги", "Жим стоя"]));
         bodyWeightHistory.length = 0;
         bodyWeightHistory.push(...(data.bodyWeightHistory || []));
-        window.nextId = data.nextId || 1;
+        nextId = data.nextId || 1;
     }
-    if (window.currentWorkout) initCurrentWorkout();
+    initCurrentWorkout();
     renderExerciseManageList();
     renderExercises();
     renderHistory();
@@ -323,7 +329,8 @@ onAuthStateChanged(auth, async (user) => {
     if (user) {
         window.currentUser = user;
         await loadUserData();
-    } else if (window.currentUser === null) {
+    } else {
+        window.currentUser = null;
         document.getElementById('login-page').classList.add('active-page');
         document.getElementById('app-page').classList.remove('active-page');
         document.getElementById('mainTabs').style.display = 'none';
