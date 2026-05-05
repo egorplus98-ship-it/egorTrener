@@ -62,18 +62,19 @@ body {
     margin: 0 auto;
     display: flex;
     background: #11141f;
-    border-top: 1px solid #2a2f3f;
+    border-top: 2px solid #2a2f3f;
     z-index: 100;
+    padding: 5px 0;
 }
 
 .tab-btn {
     flex: 1;
-    padding: 12px 0;
+    padding: 18px 0;
     background: transparent;
     border: none;
     color: #8c91a4;
-    font-size: 12px;
-    font-weight: 500;
+    font-size: 14px;
+    font-weight: 600;
     cursor: pointer;
 }
 
@@ -497,7 +498,7 @@ canvas {
     }
 }
 
-/* Стиль для ввода "Собственный вес" */
+/* РЎС‚РёР»СЊ РґР»СЏ РІРІРѕРґР° "РЎРѕР±СЃС‚РІРµРЅРЅС‹Р№ РІРµСЃ" */
 .weight-type-select {
     background: #2a2f40;
     border: none;
