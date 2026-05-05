@@ -11,16 +11,11 @@ import {
 import { Charts } from './charts.js';
 
 // Глобальные переменные
-window.currentUser = null;
+let currentUser = null;
 const charts = new Charts();
 
 // Инициализация приложения
 function initApp() {
-    // Правильная инициализация глобальной переменной
-    if (!window.currentWorkout) {
-        window.currentWorkout = currentWorkout;
-    }
-    
     initCurrentWorkout();
     renderExerciseManageList();
     renderExercises();
@@ -41,7 +36,7 @@ function setupEventListeners() {
         const password = document.getElementById('loginPassword').value;
         try {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
-            window.currentUser = userCredential.user;
+            currentUser = userCredential.user;
             await loadUserData();
         } catch(error) {
             alert('Ошибка входа: ' + error.message);
@@ -51,7 +46,7 @@ function setupEventListeners() {
     // Выход
     document.getElementById('logoutBtn')?.addEventListener('click', async () => {
         await signOut(auth);
-        window.currentUser = null;
+        currentUser = null;
         document.getElementById('login-page').classList.add('active-page');
         document.getElementById('app-page').classList.remove('active-page');
         document.getElementById('mainTabs').style.display = 'none';
@@ -67,7 +62,7 @@ function setupEventListeners() {
         
         let savedCount = 0;
         for (let exercise of customExercises) {
-            const sets = window.currentWorkout[exercise];
+            const sets = currentWorkout[exercise];
             if (sets && sets.length > 0) {
                 trainingHistory.push({
                     id: nextId++,
@@ -82,7 +77,7 @@ function setupEventListeners() {
                     calories: null
                 });
                 savedCount++;
-                window.currentWorkout[exercise] = [];
+                currentWorkout[exercise] = [];
             }
         }
         
@@ -99,7 +94,7 @@ function setupEventListeners() {
             charts.updateMaxChart(trainingHistory);
             charts.updateWeightChart(bodyWeightHistory);
             document.getElementById('caloriesInput').value = '';
-            if (window.currentUser) await syncToCloud(window.currentUser.uid, {
+            if (currentUser) await syncToCloud(currentUser.uid, {
                 trainingHistory, customExercises, bodyWeightHistory, nextId
             });
             alert(`Сохранено ${savedCount} упражнений`);
@@ -113,10 +108,10 @@ function setupEventListeners() {
         const newEx = document.getElementById('newExerciseNameInput').value.trim();
         if (newEx && !customExercises.includes(newEx)) {
             customExercises.push(newEx);
-            window.currentWorkout[newEx] = [];
+            currentWorkout[newEx] = [];
             renderExerciseManageList();
             renderExercises();
-            if (window.currentUser) await syncToCloud(window.currentUser.uid, {
+            if (currentUser) await syncToCloud(currentUser.uid, {
                 trainingHistory, customExercises, bodyWeightHistory, nextId
             });
             document.getElementById('newExerciseNameInput').value = '';
@@ -138,7 +133,7 @@ function setupEventListeners() {
             else bodyWeightHistory.push({ date, weight });
             updateWeightHistoryList();
             charts.updateWeightChart(bodyWeightHistory);
-            if (window.currentUser) await syncToCloud(window.currentUser.uid, {
+            if (currentUser) await syncToCloud(currentUser.uid, {
                 trainingHistory, customExercises, bodyWeightHistory, nextId
             });
             document.getElementById('weightValueInput').value = '';
@@ -193,8 +188,8 @@ function setupEventListeners() {
 
     // Синхронизация вручную
     document.getElementById('syncNowBtn')?.addEventListener('click', async () => {
-        if (window.currentUser) {
-            await syncToCloud(window.currentUser.uid, {
+        if (currentUser) {
+            await syncToCloud(currentUser.uid, {
                 trainingHistory, customExercises, bodyWeightHistory, nextId
             });
             alert('Синхронизация завершена');
@@ -206,7 +201,7 @@ function setupEventListeners() {
         const pickerContainer = document.getElementById('exercisePickerList');
         pickerContainer.innerHTML = '';
         customExercises.forEach(exercise => {
-            const hasSets = window.currentWorkout[exercise] && window.currentWorkout[exercise].length > 0;
+            const hasSets = currentWorkout[exercise] && currentWorkout[exercise].length > 0;
             const div = document.createElement('div');
             div.className = 'exercise-picker-item';
             div.innerHTML = `<span>${exercise} ${hasSets ? 'есть' : ''}</span><button class="add-exercise-picker-btn" data-exercise="${exercise}">Добавить</button>`;
@@ -215,11 +210,11 @@ function setupEventListeners() {
         document.querySelectorAll('.add-exercise-picker-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const exercise = btn.dataset.exercise;
-                if (!window.currentWorkout[exercise]) {
-                    window.currentWorkout[exercise] = [];
+                if (!currentWorkout[exercise]) {
+                    currentWorkout[exercise] = [];
                 }
-                if (window.currentWorkout[exercise].length === 0) {
-                    window.currentWorkout[exercise].push({ weight: 60, weightType: 'kg', reps: 8, effort: 7 });
+                if (currentWorkout[exercise].length === 0) {
+                    currentWorkout[exercise].push({ weight: 60, weightType: 'kg', reps: 8, effort: 7 });
                 }
                 renderExercises();
                 document.getElementById('exercisePickerModal').style.display = 'none';
@@ -302,14 +297,18 @@ function setupEventListeners() {
 
 // Загрузка данных пользователя из облака
 async function loadUserData() {
-    const data = await loadFromCloud(window.currentUser.uid);
+    const data = await loadFromCloud(currentUser.uid);
     if (data) {
+        // Очищаем массивы через length = 0, чтобы сохранить ссылки
         trainingHistory.length = 0;
         trainingHistory.push(...(data.trainingHistory || []));
+        
         customExercises.length = 0;
         customExercises.push(...(data.customExercises || ["Жим лёжа", "Присед", "Становая тяга", "Тяга штанги", "Жим стоя"]));
+        
         bodyWeightHistory.length = 0;
         bodyWeightHistory.push(...(data.bodyWeightHistory || []));
+        
         nextId = data.nextId || 1;
     }
     initCurrentWorkout();
@@ -320,7 +319,7 @@ async function loadUserData() {
     charts.updateProgressChart(trainingHistory, customExercises);
     charts.updateMaxChart(trainingHistory);
     charts.updateWeightChart(bodyWeightHistory);
-    document.getElementById('userEmail').innerText = window.currentUser.email;
+    document.getElementById('userEmail').innerText = currentUser.email;
     document.getElementById('login-page').classList.remove('active-page');
     document.getElementById('app-page').classList.add('active-page');
     document.getElementById('mainTabs').style.display = 'flex';
@@ -330,10 +329,10 @@ async function loadUserData() {
 // Подписка на изменение состояния авторизации
 onAuthStateChanged(auth, async (user) => {
     if (user) {
-        window.currentUser = user;
+        currentUser = user;
         await loadUserData();
     } else {
-        window.currentUser = null;
+        currentUser = null;
         document.getElementById('login-page').classList.add('active-page');
         document.getElementById('app-page').classList.remove('active-page');
         document.getElementById('mainTabs').style.display = 'none';
