@@ -1003,30 +1003,28 @@ document.getElementById('closePickerBtn')?.addEventListener('click', () => docum
             });
             container.appendChild(dayDiv);
         }
-        document.querySelectorAll('#workout-history-container .small-delete').forEach(btn=>{
-            btn.addEventListener('click',(e)=>{
-                e.stopPropagation();
-                if(btn.dataset.date){
-                    let date=btn.dataset.date;
-                    if(confirm(`Удалить все тренировки за ${formatDateToDMY(date)}?`)){
-                        trainingHistory=trainingHistory.filter(w=>w.date!==date);
-                        renderWorkoutHistory();
-                        updateProgressChart();
-                        updateMaxChart();
-                        saveToLocal();
-                    }
-                }else if(btn.dataset.id){
-                    let id=parseInt(btn.dataset.id);
-                    trainingHistory=trainingHistory.filter(w=>w.id!==id);
-                    renderWorkoutHistory();
-                    updateProgressChart();
-                    updateMaxChart();
-                    saveToLocal();
-                }
-            });
-        });
-    }
-    
+document.querySelectorAll('#workout-history-container .small-delete').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (btn.dataset.date) {
+            let date = btn.dataset.date;
+            if (confirm(`Удалить все тренировки за ${formatDateToDMY(date)}?`)) {
+                trainingHistory = trainingHistory.filter(w => w.date !== date);
+                renderWorkoutHistory();
+                updateProgressChart();
+                updateMaxChart();
+                saveToLocal();
+            }
+        } else if (btn.dataset.id) {
+            let id = parseInt(btn.dataset.id);
+            trainingHistory = trainingHistory.filter(w => w.id !== id);
+            renderWorkoutHistory();
+            updateProgressChart();
+            updateMaxChart();
+            saveToLocal();
+        }
+    });
+});
     function renderFoodHistory(){
         let container=document.getElementById('food-history-container');
         if(!container)return;
