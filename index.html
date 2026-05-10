@@ -1322,7 +1322,9 @@
         if (key) { openrouterApiKey = key; document.getElementById('apiKeyStatus').innerHTML = '✅ Ключ активен'; document.getElementById('apiKeyStatus').className = 'api-status active'; }
         else alert('Введите ключ');
     });
-            document.getElementById('copyJsonBtn')?.addEventListener('click', () => navigator.clipboard.writeText(JSON.stringify({ foodEntries, trainingHistory, customExercises, bodyWeightHistory }, null, 2)).then(() => alert('JSON скопирован')));
+document.getElementById('copyJsonBtn')?.addEventListener('click', () => {
+        navigator.clipboard.writeText(JSON.stringify({ foodEntries, trainingHistory, customExercises, bodyWeightHistory }, null, 2)).then(() => alert('JSON скопирован'));
+    });
     document.getElementById('syncNowBtn')?.addEventListener('click', () => { saveToLocal(); alert('Данные сохранены'); });
     document.getElementById('syncCloudBtn')?.addEventListener('click', () => { saveToLocal(); alert('☁️ Синхронизация выполнена'); });
     document.getElementById('smartAdviceBtn')?.addEventListener('click', () => {
