@@ -67,8 +67,28 @@
         .exercise-header { background: #2a2f40; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; border-radius: 16px 16px 0 0; }
         .order-number { background: #ff7b2c; color: black; width: 28px; height: 28px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; margin-right: 8px; font-size: 12px; }
         .exercise-sets { padding: 10px; }
-        .set-header { display: grid; grid-template-columns: 28px 65px 75px 60px 32px; gap: 6px; font-size: 10px; color: #9ba1bc; margin-bottom: 4px; }
-        .set-row { display: grid; grid-template-columns: 28px 65px 75px 60px 32px; gap: 6px; align-items: center; background: #1e2332; padding: 6px; border-radius: 10px; margin-bottom: 4px; }
+.set-header {
+    display: grid;
+    grid-template-columns: 28px 70px 85px 70px 60px 32px;
+    gap: 6px;
+    font-size: 10px;
+    color: #9ba1bc;
+    margin-bottom: 4px;
+}
+.set-row {
+    display: grid;
+    grid-template-columns: 28px 70px 85px 70px 60px 32px;
+    gap: 6px;
+    align-items: center;
+    background: #1e2332;
+    padding: 6px;
+    border-radius: 10px;
+    margin-bottom: 4px;
+}
+        @media (max-width: 500px) {
+    .set-header { grid-template-columns: 25px 60px 75px 60px 55px 28px; gap: 4px; }
+    .set-row { grid-template-columns: 25px 60px 75px 60px 55px 28px; gap: 4px; }
+}
         .set-input, .weight-type-select { background: #2a2f40; border: none; padding: 6px 0; border-radius: 8px; color: white; text-align: center; font-size: 11px; width: 100%; }
         .weight-display { background: #2a2f40; padding: 6px 0; border-radius: 8px; text-align: center; font-size: 11px; width: 100%; }
         .weight-display.own-weight { color: #2ecc71; font-style: italic; }
@@ -265,28 +285,24 @@
     function formatDateToDMY(d) { if (!d) return ""; let p = d.split('-'); return p.length === 3 ? `${p[2]}.${p[1]}.${p[0]}` : d; }
     
     // ИСПРАВЛЕННАЯ ФУНКЦИЯ ПАРСИНГА КАЛОРИЙ
-    function parseCalories(input) {
-        if (!input || input.trim() === "") return null;
-        let str = input.toString().trim();
-        // Убираем все буквы, оставляем только цифры, + и -
-        str = str.replace(/[^0-9+\-]/g, '');
-        if (str === "") return null;
-        if (str.includes('+')) {
-            let parts = str.split('+');
-            let total = 0;
-            for (let p of parts) {
-                let num = parseFloat(p);
-                if (!isNaN(num)) total += num;
-            }
-            return total;
+function parseCalories(input) {
+    if (!input || input.trim() === "") return null;
+    let str = input.toString().trim();
+    // Убираем все буквы, оставляем только цифры, + и -
+    str = str.replace(/[^0-9+\-]/g, '');
+    if (str === "") return null;
+    if (str.includes('+')) {
+        let parts = str.split('+');
+        let total = 0;
+        for (let p of parts) {
+            let num = parseFloat(p);
+            if (!isNaN(num)) total += num;
         }
-        if (str.includes('-')) {
-            let parts = str.split('-');
-            let total = parseFloat(parts[0]) || 0;
-            for (let i = 1; i < parts.length; i++) {
-                let num = parseFloat(parts[i]);
-                if (!isNaN(num)) total -= num;
-            }
+        return total;
+    }
+    let num = parseFloat(str);
+    return isNaN(num) ? null : num;
+}
             return total;
         }
         let num = parseFloat(str);
@@ -493,7 +509,6 @@
             let sets = currentWorkout[exercise];
             let block = document.createElement('div'); block.className = 'exercise-block';
             block.innerHTML = `<div class="exercise-header"><div><span class="order-number" data-exercise="${exercise}">${idx + 1}</span><b>${exercise}</b></div><div class="action-buttons"><button class="round-delete delete-exercise-btn" data-exercise="${exercise}">✕</button></div></div><div class="exercise-sets"><div class="set-header"><span>№</span><span>Вес</span><span>Тип</span><span>Повт</span><span>Усил</span><span></span></div>${sets.map((s, i) => `<div class="set-row"><span>${i + 1}</span>${s.type === 'bw' ? '<div class="weight-display own-weight">—</div>' : `<input class="set-input weight-value" value="${s.weight}" data-exercise="${exercise}" data-set-idx="${i}" data-field="weight" style="text-align:center;">`}<select class="weight-type-select" data-exercise="${exercise}" data-set-idx="${i}" data-field="type"><option value="kg" ${s.type === 'kg' ? 'selected' : ''}>кг</option><option value="bw" ${s.type === 'bw' ? 'selected' : ''}>Свой вес</option></select><select class="set-input" data-exercise="${exercise}" data-set-idx="${i}" data-field="reps">${generateRepOptions(s.reps)}</select><select class="set-input" data-exercise="${exercise}" data-set-idx="${i}" data-field="effort">${generateEffortOptions(s.effort)}</select><button class="delete-set-btn" data-exercise="${exercise}" data-set-idx="${i}">✕</button></div>`).join('')}<button class="add-set-btn secondary" data-exercise="${exercise}">+ Подход</button></div>`;
-            container.appendChild(block);
         });
         if (exercisesToShow.length === 0) container.innerHTML = '<div style="padding:20px;text-align:center;">➕ Упр.</div>';
         
@@ -506,36 +521,36 @@
     }
     
     // Исправленное сохранение тренировки с калориями
-    document.getElementById('saveAllWorkoutsBtn')?.addEventListener('click', async () => {
-        let date = document.getElementById('workoutDate').value;
-        if (!date) { alert('Выберите дату'); return; }
-        let saved = 0;
-        let caloriesValue = parseCalories(document.getElementById('caloriesInput').value);
-        
-        for (let ex of workoutExercisesOrder) {
-            let sets = currentWorkout[ex];
-            if (sets && sets.length) {
-                trainingHistory.push({ 
-                    id: nextId++, 
-                    date, 
-                    exercise: ex, 
-                    sets: sets.map(s => ({ weight: s.weight, weightType: s.type || 'kg', reps: s.reps, effort: s.effort || 7 })), 
-                    calories: caloriesValue
-                });
-                saved++;
-                currentWorkout[ex] = [];
-            }
+document.getElementById('saveAllWorkoutsBtn')?.addEventListener('click', async () => {
+    let date = document.getElementById('workoutDate').value;
+    if (!date) { alert('Выберите дату'); return; }
+    let saved = 0;
+    let caloriesValue = parseCalories(document.getElementById('caloriesInput').value);
+    
+    for (let ex of workoutExercisesOrder) {
+        let sets = currentWorkout[ex];
+        if (sets && sets.length) {
+            trainingHistory.push({ 
+                id: nextId++, 
+                date, 
+                exercise: ex, 
+                sets: sets.map(s => ({ weight: s.weight, weightType: s.type || 'kg', reps: s.reps, effort: s.effort || 7 })), 
+                calories: caloriesValue
+            });
+            saved++;
+            currentWorkout[ex] = [];
         }
-        workoutExercisesOrder = [];
-        if (saved) { 
-            renderExercises(); 
-            saveLocal(); 
-            await syncToCloud(); 
-            document.getElementById('caloriesInput').value = '';
-            alert(`Сохранено ${saved} упражнений, калории: ${caloriesValue || 0}`); 
-        }
-        else alert('Нет подходов');
-    });
+    }
+    workoutExercisesOrder = [];
+    if (saved) { 
+        renderExercises(); 
+        saveLocal(); 
+        await syncToCloud(); 
+        document.getElementById('caloriesInput').value = '';
+        alert(`Сохранено ${saved} упражнений, калории: ${caloriesValue || 0}`); 
+    }
+    else alert('Нет подходов');
+});
     
     // ---------- УПРАВЛЕНИЕ УПРАЖНЕНИЯМИ ----------
     function renderExerciseManageList() {
