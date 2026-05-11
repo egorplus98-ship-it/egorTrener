@@ -261,6 +261,7 @@
             z-index: 200;
             align-items: center;
             justify-content: center;
+            overflow-y: auto;
         }
         .modal-window {
             background: #141824;
@@ -268,6 +269,8 @@
             padding: 20px;
             width: 90%;
             max-width: 360px;
+            max-height: 85vh;
+            overflow-y: auto;
             border: 1px solid #ff7b2c;
         }
         .profile-field {
@@ -495,12 +498,14 @@
         </div>
     </div>
 
+    <!-- Экран входа с автоматическим входом -->
     <div id="login-page" class="page active-page">
         <div class="card login-card">
-            <h2>🔐 Вход</h2>
+            <h2>🔐 Вход в трекер</h2>
             <input type="email" id="loginEmail" placeholder="Email" value="egorplus98@gmail.com">
-            <input type="password" id="loginPassword" placeholder="Пароль">
+            <input type="password" id="loginPassword" placeholder="Пароль" value="egorplus2003">
             <button id="loginBtn">Войти</button>
+            <p style="font-size:12px; margin-top:12px;">Данные сохраняются локально</p>
         </div>
     </div>
 
@@ -524,7 +529,7 @@
             <div class="card">
                 <div class="input-row"><input type="date" id="foodDate" class="date-input"></div>
                 <div id="dailySummary" class="daily-summary"><div style="text-align:center;">📊 Итого за день</div><div class="summary-grid"><div class="summary-item"><div class="summary-value" id="sumKcal">0</div><div class="summary-label">Ккал</div></div><div class="summary-item"><div class="summary-value" id="sumProtein">0</div><div class="summary-label">Белки</div></div><div class="summary-item"><div class="summary-value" id="sumFat">0</div><div class="summary-label">Жиры</div></div><div class="summary-item"><div class="summary-value" id="sumCarbs">0</div><div class="summary-label">Углеводы</div></div></div></div>
-                <button id="voiceInputBtn" class="microphone-btn">🎤 Диктовать еду (ИИ)</button>
+                <button id="voiceInputBtn" class="microphone-btn">🎤 Диктовать еду</button>
                 <div id="voiceStatus" class="voice-status"></div>
                 <div class="request-counter" id="requestCounterDisplay">🤖 Осталось запросов ИИ: 50</div>
                 <div class="input-row" style="margin-top:12px;"><input type="text" id="productSearchInput" placeholder="Поиск продукта или фраза (например: пол ананаса, 150г творога)..." style="flex:1; background:#1e2332; border:1px solid #2f3548; border-radius:14px; padding:10px; color:white;"><button id="searchProductBtn" class="small-btn">🔍</button></div>
@@ -638,6 +643,32 @@
         "тарелка каши": 200, "стакан кефира": 200, "чашка кофе": 150
     };
 
+    // Автоматический вход при загрузке страницы
+    function autoLogin() {
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+        if (email && password) {
+            currentUser = { email };
+            loadFromLocal();
+            loadDraft();
+            document.getElementById('login-page').classList.remove('active-page');
+            document.getElementById('app-page').classList.add('active-page');
+            document.getElementById('mainTabs').style.display = 'flex';
+            renderExercises();
+            renderFoodList();
+            renderWorkoutHistory();
+            renderFoodHistory();
+            updateProgressChart();
+            updateMaxChart();
+            updateFoodCharts();
+            updateWeightChart();
+            updateWeightHistoryList();
+            document.getElementById('workoutDate').value = getToday();
+            document.getElementById('foodDate').value = getToday();
+            updateCounterDisplay();
+        }
+    }
+
     function updateCounterDisplay() {
         document.getElementById('requestCounterDisplay').innerHTML = `🤖 Осталось запросов ИИ: ${remainingRequests}`;
     }
@@ -688,17 +719,17 @@
     }
 
     function getTypicalWeight(productName) {
-        for (let [key, weight] of Object.entries(typicalWeights)) {
+                for (let [key, weight] of Object.entries(typicalWeights)) {
             if (productName.toLowerCase().includes(key)) return weight;
         }
         return 100;
     }
 
-    // ---------- ЗАПРОС К OPENROUTER API ----------
+    // ---------- ЗАПРОС К OPENROUTER API (ОПЦИОНАЛЬНО) ----------
     async function askAI(foodText) {
         if (!openrouterApiKey) return null;
         if (remainingRequests <= 0) {
-            alert('Лимит запросов ИИ исчерпан на сегодня');
+            console.log('Лимит запросов ИИ исчерпан');
             return null;
         }
         
@@ -717,7 +748,7 @@
 Фраза: "${foodText}"
 
 Верни JSON строго в формате:
-{"name": "название продукта",                     "weight": 100, "protein": 0, "fat": 0, "carbs": 0, "kcal": 0}
+{"name": "название продукта", "weight": 100, "protein": 0, "fat": 0, "carbs": 0, "kcal": 0}
 
 Если вес не указан, используй стандартную порцию (100г для продуктов, 150г для фруктов, 250г для супа).
 Если продукт сложный (типа "творог из под коровы"), верни обычный творог.
@@ -742,7 +773,7 @@
         return null;
     }
 
-    // ---------- ДОБАВЛЕНИЕ ЕДЫ С ИИ ----------
+    // ---------- ДОБАВЛЕНИЕ ЕДЫ ----------
     async function addFoodFromText(foodText, showAlert = true) {
         const date = document.getElementById('foodDate').value || getToday();
         
@@ -772,11 +803,11 @@
             renderFoodList();
             updateFoodCharts();
             saveToLocal();
-            if (showAlert) alert(`✅ Добавлено: ${localFind.product} (${weight}г) через локальную базу`);
+            if (showAlert) alert(`✅ Добавлено: ${localFind.product} (${weight}г)`);
             return true;
         }
         
-        // Если не найдено и есть ключ API и остались запросы
+        // Если есть ключ API и остались запросы - пробуем ИИ
         if (openrouterApiKey && remainingRequests > 0) {
             const voiceStatus = document.getElementById('voiceStatus');
             if (voiceStatus) voiceStatus.innerHTML = '🤖 Отправляем запрос ИИ...';
@@ -813,13 +844,13 @@
                 if (showAlert) alert(`✅ ИИ распознал: ${aiResult.name} (${finalWeight}г) | Б:${(aiResult.protein || 0).toFixed(1)} Ж:${(aiResult.fat || 0).toFixed(1)} У:${(aiResult.carbs || 0).toFixed(1)} | ${(aiResult.kcal || 0).toFixed(0)} ккал`);
                 return true;
             } else {
-                if (showAlert) alert('❌ ИИ не смог распознать продукт. Попробуйте иначе или добавьте вручную.');
+                if (showAlert) alert('❌ ИИ не смог распознать продукт. Добавьте вручную.');
                 return false;
             }
         } else if (!openrouterApiKey) {
-            if (showAlert) alert('❌ Продукт не найден в базе. Введите API-ключ OpenRouter на вкладке ИИ для распознавания сложных фраз (пол ананаса, борщ, творог из под коровы и т.д.)');
+            if (showAlert) alert('❌ Продукт не найден в базе. Добавьте вручную или введите API-ключ OpenRouter.');
         } else if (remainingRequests === 0) {
-            if (showAlert) alert('❌ Лимит запросов ИИ исчерпан. Добавьте продукт вручную через поиск или кнопку "➕ Добавить вручную"');
+            if (showAlert) alert('❌ Лимит запросов ИИ исчерпан. Добавьте продукт вручную.');
         }
         return false;
     }
@@ -863,7 +894,6 @@
         
         if (exercisesToShow.length === 0) container.innerHTML = '<div style="padding:20px;text-align:center;">➕ Упр.</div>';
         
-        // Обработчики событий для тренировок
         document.querySelectorAll('.order-number').forEach(el => el.addEventListener('click', () => {
             currentOrderExercise = el.dataset.exercise;
             document.getElementById('orderExerciseName').innerText = currentOrderExercise;
@@ -1070,19 +1100,16 @@
     });
     document.getElementById('closeWeightModal')?.addEventListener('click', () => document.getElementById('weightModal').style.display = 'none');
 
-    // Поиск продукта (сначала в базе, потом ИИ если не найдено)
     document.getElementById('searchProductBtn')?.addEventListener('click', async () => {
         let query = document.getElementById('productSearchInput').value.trim();
         if (!query) return;
         
-        // Сначала ищем в локальной базе
         let localFind = findProductInDatabase(query);
         if (localFind) {
             showWeightModal(localFind.product, localFind.nutrition);
             return;
         }
         
-        // Если не найдено, пробуем ИИ
         if (openrouterApiKey && remainingRequests > 0) {
             let added = await addFoodFromText(query, true);
             if (added) {
@@ -1091,7 +1118,7 @@
                 updateFoodCharts();
             }
         } else if (!openrouterApiKey) {
-            alert('❌ Продукт не найден в базе. Введите API-ключ OpenRouter на вкладке ИИ');
+            alert('❌ Продукт не найден в базе. Добавьте вручную или введите API-ключ OpenRouter.');
         } else if (remainingRequests === 0) {
             alert('❌ Лимит запросов ИИ исчерпан. Добавьте продукт вручную');
         }
@@ -1187,7 +1214,7 @@
         }
     }
 
-    // ---------- ИСТОРИЯ ТРЕНИРОВОК И ПИТАНИЯ ----------
+    // ---------- ИСТОРИЯ ----------
     function renderWorkoutHistory() {
         let container = document.getElementById('workout-history-container');
         if (!container) return;
@@ -1309,7 +1336,7 @@
             let existing = bodyWeightHistory.find(w => w.date === date);
             if (existing) existing.weight = weight;
             else bodyWeightHistory.push({ date, weight });
-            updateWeightHistoryList();
+                        updateWeightHistoryList();
             updateWeightChart();
             saveToLocal();
             document.getElementById('weightValueInput').value = '';
@@ -1319,11 +1346,33 @@
     // ---------- ИИ НАСТРОЙКИ ----------
     document.getElementById('saveApiKeyBtn')?.addEventListener('click', () => {
         let key = document.getElementById('openrouterKey').value.trim();
-        if (key) { openrouterApiKey = key; document.getElementById('apiKeyStatus').innerHTML = '✅ Ключ активен'; document.getElementById('apiKeyStatus').className = 'api-status active'; }
-        else alert('Введите ключ');
+        if (key) { 
+            openrouterApiKey = key; 
+            document.getElementById('apiKeyStatus').innerHTML = '✅ Ключ активен'; 
+            document.getElementById('apiKeyStatus').className = 'api-status active';
+            localStorage.setItem('openrouterApiKey', key);
+            alert('Ключ сохранён!');
+        } else {
+            alert('Введите ключ');
+        }
     });
-document.getElementById('copyJsonBtn')?.addEventListener('click', () => {
-        navigator.clipboard.writeText(JSON.stringify({ foodEntries, trainingHistory, customExercises, bodyWeightHistory }, null, 2)).then(() => alert('JSON скопирован'));
+    
+    // Загрузка сохранённого ключа
+    const savedKey = localStorage.getItem('openrouterApiKey');
+    if (savedKey) {
+        openrouterApiKey = savedKey;
+        document.getElementById('apiKeyStatus').innerHTML = '✅ Ключ активен';
+        document.getElementById('apiKeyStatus').className = 'api-status active';
+    }
+    
+    document.getElementById('copyJsonBtn')?.addEventListener('click', () => {
+        const exportData = { 
+            foodEntries, 
+            trainingHistory, 
+            customExercises, 
+            bodyWeightHistory 
+        };
+        navigator.clipboard.writeText(JSON.stringify(exportData, null, 2)).then(() => alert('JSON скопирован'));
     });
     document.getElementById('syncNowBtn')?.addEventListener('click', () => { saveToLocal(); alert('Данные сохранены'); });
     document.getElementById('syncCloudBtn')?.addEventListener('click', () => { saveToLocal(); alert('☁️ Синхронизация выполнена'); });
@@ -1342,7 +1391,7 @@ document.getElementById('copyJsonBtn')?.addEventListener('click', () => {
         document.getElementById('adviceOutput').innerHTML = text || 'Нет данных';
     });
 
-    // ---------- ГОЛОСОВОЙ ВВОД С ИИ ----------
+    // ---------- ГОЛОСОВОЙ ВВОД ----------
     let recognition = null;
     if ('webkitSpeechRecognition' in window) {
         recognition = new webkitSpeechRecognition();
@@ -1365,7 +1414,6 @@ document.getElementById('copyJsonBtn')?.addEventListener('click', () => {
             document.getElementById('voiceStatus').innerHTML = `🎤 Распознано: "${text}"`;
             document.getElementById('voiceInputBtn').classList.remove('listening');
             
-            // Сначала ищем в локальной базе
             let localFind = findProductInDatabase(text);
             if (localFind) {
                 showWeightModal(localFind.product, localFind.nutrition);
@@ -1373,7 +1421,6 @@ document.getElementById('copyJsonBtn')?.addEventListener('click', () => {
                 return;
             }
             
-            // Если не найдено и есть ключ API
             if (openrouterApiKey && remainingRequests > 0) {
                 let added = await addFoodFromText(text, true);
                 if (added) {
@@ -1381,7 +1428,7 @@ document.getElementById('copyJsonBtn')?.addEventListener('click', () => {
                     updateFoodCharts();
                 }
             } else if (!openrouterApiKey) {
-                alert('❌ Продукт не найден в базе. Введите API-ключ OpenRouter на вкладке ИИ');
+                alert('❌ Продукт не найден в базе. Добавьте вручную или введите API-ключ OpenRouter.');
             } else if (remainingRequests === 0) {
                 alert('❌ Лимит запросов ИИ исчерпан. Добавьте продукт вручную');
             }
@@ -1460,7 +1507,7 @@ document.getElementById('copyJsonBtn')?.addEventListener('click', () => {
     document.getElementById('orderModal')?.addEventListener('click', (e) => { if (e.target === document.getElementById('orderModal')) document.getElementById('orderModal').style.display = 'none'; });
     document.getElementById('weightModal')?.addEventListener('click', (e) => { if (e.target === document.getElementById('weightModal')) document.getElementById('weightModal').style.display = 'none'; });
 
-    // ---------- ВХОД ----------
+    // ---------- ВХОД (автоматический после загрузки) ----------
     document.getElementById('loginBtn')?.addEventListener('click', () => {
         let email = document.getElementById('loginEmail').value;
         let password = document.getElementById('loginPassword').value;
@@ -1485,6 +1532,7 @@ document.getElementById('copyJsonBtn')?.addEventListener('click', () => {
             updateCounterDisplay();
         } else alert('Введите email и пароль');
     });
+    
     document.getElementById('logoutBtn')?.addEventListener('click', () => {
         currentUser = null;
         document.getElementById('login-page').classList.add('active-page');
@@ -1495,6 +1543,19 @@ document.getElementById('copyJsonBtn')?.addEventListener('click', () => {
         let icon = document.getElementById('bicepIcon');
         icon.style.animation = 'none';
         setTimeout(() => icon.style.animation = 'flexBicep 2s ease-in-out infinite', 10);
+    });
+
+    // ---------- АВТОМАТИЧЕСКИЙ ВХОД ПРИ ЗАГРУЗКЕ ----------
+    window.addEventListener('DOMContentLoaded', () => {
+        // Небольшая задержка для полной загрузки DOM
+        setTimeout(() => {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            if (email && password) {
+                // Имитируем клик по кнопке входа
+                document.getElementById('loginBtn').click();
+            }
+        }, 100);
     });
 
     // ---------- ЗАПУСК ----------
