@@ -226,22 +226,23 @@
     
     // ЕДИНСТВЕННАЯ ПРАВИЛЬНАЯ ФУНКЦИЯ parseCalories
     function parseCalories(input) {
-        if (!input || input.trim() === "") return null;
-        let str = input.toString().trim();
-        str = str.replace(/[^0-9+\-]/g, '');
-        if (str === "") return null;
-        if (str.includes('+')) {
-            let parts = str.split('+');
-            let total = 0;
-            for (let p of parts) {
-                let num = parseFloat(p);
-                if (!isNaN(num)) total += num;
-            }
-            return total;
+function parseCalories(input) {
+    if (!input || input.trim() === "") return null;
+    let str = input.toString().trim();
+    str = str.replace(/[^0-9+\-]/g, '');
+    if (str === "") return null;
+    if (str.includes('+')) {
+        let parts = str.split('+');
+        let total = 0;
+        for (let p of parts) {
+            let num = parseFloat(p);
+            if (!isNaN(num)) total += num;
         }
-        let num = parseFloat(str);
-        return isNaN(num) ? null : num;
+        return total;
     }
+    let num = parseFloat(str);
+    return isNaN(num) ? null : num;
+}
     
     function calculate1RM(w, r, e) { return Math.round(w * (1 + r / 30) * (0.7 + (e / 10) * 0.3)); }
     
