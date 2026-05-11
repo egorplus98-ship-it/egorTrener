@@ -67,12 +67,12 @@
         .exercise-header { background: #2a2f40; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; border-radius: 16px 16px 0 0; }
         .order-number { background: #ff7b2c; color: black; width: 28px; height: 28px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; margin-right: 8px; font-size: 12px; }
         .exercise-sets { padding: 10px; }
-        .set-header { display: grid; grid-template-columns: 28px 70px 65px 60px 32px; gap: 4px; font-size: 10px; color: #9ba1bc; margin-bottom: 4px; }
-        .set-row { display: grid; grid-template-columns: 28px 70px 65px 60px 32px; gap: 4px; align-items: center; background: #1e2332; padding: 6px; border-radius: 10px; margin-bottom: 4px; }
+        .set-header { display: grid; grid-template-columns: 28px 65px 75px 60px 32px; gap: 6px; font-size: 10px; color: #9ba1bc; margin-bottom: 4px; }
+        .set-row { display: grid; grid-template-columns: 28px 65px 75px 60px 32px; gap: 6px; align-items: center; background: #1e2332; padding: 6px; border-radius: 10px; margin-bottom: 4px; }
         .set-input, .weight-type-select { background: #2a2f40; border: none; padding: 6px 0; border-radius: 8px; color: white; text-align: center; font-size: 11px; width: 100%; }
         .weight-display { background: #2a2f40; padding: 6px 0; border-radius: 8px; text-align: center; font-size: 11px; width: 100%; }
         .weight-display.own-weight { color: #2ecc71; font-style: italic; }
-        .delete-set-btn { background: #ff5c5c; border: none; border-radius: 50%; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-size: 12px; color: white; }
+        .delete-set-btn { background: #ff5c5c; border: none; border-radius: 50%; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-size: 12px; color: white; margin-left: auto; }
         .food-item { background: #1e2332; padding: 12px; border-radius: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
         .daily-summary { background: #2a2f40; border-radius: 16px; padding: 12px; margin-bottom: 16px; }
         .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 8px; }
@@ -81,7 +81,7 @@
         .modal-window { background: #141824; border-radius: 28px; padding: 20px; width: 90%; max-width: 380px; max-height: 85vh; overflow-y: auto; border: 1px solid #ff7b2c; }
         .profile-field { margin-bottom: 14px; }
         .profile-field label { font-size: 12px; display: block; margin-bottom: 4px; color: #9ba1bc; }
-        .profile-field input, .profile-field select, .profile-field input, .dark-input { width: 100%; padding: 10px; background: #1e2332; border: 1px solid #2f3548; border-radius: 14px; color: white; }
+        .profile-field input, .profile-field select, .dark-input { width: 100%; padding: 10px; background: #1e2332; border: 1px solid #2f3548; border-radius: 14px; color: white; }
         .exercise-list-compact { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
         .compact-exercise-item { display: flex; justify-content: space-between; align-items: center; background: #1e2332; padding: 10px 14px; border-radius: 14px; }
         .small-plus { background: #ff7b2c; border: none; border-radius: 30px; padding: 4px 12px; font-weight: bold; cursor: pointer; font-size: 12px; width: auto; }
@@ -119,8 +119,8 @@
         .workout-history-content { display: none; margin-top: 8px; }
         .workout-history-content.active { display: block; }
         @media (max-width: 500px) {
-            .set-header { grid-template-columns: 25px 60px 55px 50px 28px; gap: 3px; }
-            .set-row { grid-template-columns: 25px 60px 55px 50px 28px; gap: 3px; }
+            .set-header { grid-template-columns: 25px 55px 65px 55px 28px; gap: 4px; }
+            .set-row { grid-template-columns: 25px 55px 65px 55px 28px; gap: 4px; }
         }
     </style>
 </head>
@@ -158,8 +158,8 @@
                 </div>
                 <div id="exercisesContainer" class="workout-table"></div>
                 <div style="margin-top:12px;">
-                    <label>🔥 Ккал (сумма: 1000+200)</label>
-                    <input type="text" id="caloriesInput" placeholder="1000+200" class="dark-input" style="margin-top:8px;">
+                    <label>🔥 Ккал (просто число, например 1000)</label>
+                    <input type="text" id="caloriesInput" placeholder="1000" class="dark-input" style="margin-top:8px;">
                     <button id="saveAllWorkoutsBtn" style="margin-top:12px;">💾 Сохранить</button>
                 </div>
             </div>
@@ -239,7 +239,7 @@
 <div id="addFoodModal" class="modal-overlay"><div class="modal-window"><h3>➕ Добавить продукт в еду</h3><div class="profile-field"><label>Продукт</label><input type="text" id="manualFoodName" class="dark-input"></div><div class="profile-field"><label>Вес (г)</label><input type="number" id="manualFoodWeight" class="dark-input" value="100"></div><div class="profile-field"><label>Белки (на 100г)</label><input type="number" id="manualFoodProtein" class="dark-input"></div><div class="profile-field"><label>Жиры (на 100г)</label><input type="number" id="manualFoodFat" class="dark-input"></div><div class="profile-field"><label>Углеводы (на 100г)</label><input type="number" id="manualFoodCarbs" class="dark-input"></div><div class="profile-field"><label>Ккал (на 100г)</label><input type="number" id="manualFoodKcal" class="dark-input"></div><button id="confirmAddFoodBtn">Добавить</button><button id="closeAddFoodModal" class="secondary">Отмена</button></div></div>
 <div id="weightModal" class="modal-overlay"><div class="modal-window"><h3>⚖️ Вес порции</h3><p id="weightProductName"></p><div class="profile-field"><label>Граммы</label><input type="number" id="selectedWeight" class="dark-input" value="100"></div><button id="confirmWeightBtn">Добавить</button><button id="closeWeightModal" class="secondary">Отмена</button></div></div>
 <div id="productManagerModal" class="modal-overlay"><div class="modal-window"><h2>📋 Управление продуктами</h2><div class="input-row"><input type="text" id="productManagerSearch" placeholder="Поиск..." class="dark-input" style="flex:1;"><button id="productManagerSearchBtn" class="small-btn">🔍</button></div><div id="productListContainer" style="max-height: 300px; overflow-y: auto;"></div><h3 style="margin-top:12px;">➕ Добавить новый</h3><div class="profile-field"><label>Название</label><input type="text" id="newProductName" class="dark-input"></div><div class="profile-field"><label>Белки (на 100г)</label><input type="number" id="newProductProtein" class="dark-input"></div><div class="profile-field"><label>Жиры (на 100г)</label><input type="number" id="newProductFat" class="dark-input"></div><div class="profile-field"><label>Углеводы (на 100г)</label><input type="number" id="newProductCarbs" class="dark-input"></div><div class="profile-field"><label>Ккал (на 100г)</label><input type="number" id="newProductKcal" class="dark-input"></div><button id="saveNewProductBtn">➕ Добавить в базу</button><button id="closeProductManagerBtn" class="secondary" style="margin-top:12px;">Закрыть</button></div></div>
-<div id="editCaloriesModal" class="modal-overlay"><div class="modal-window"><h3>✏️ Редактировать калории</h3><div class="profile-field"><label>Калории (ккал)</label><input type="text" id="editCaloriesInput" class="dark-input" placeholder="Например: 1000+200"></div><button id="saveCaloriesBtn">Сохранить</button><button id="closeCaloriesModal" class="secondary" style="margin-top:12px;">Отмена</button></div></div>
+<div id="editCaloriesModal" class="modal-overlay"><div class="modal-window"><h3>✏️ Редактировать калории</h3><div class="profile-field"><label>Калории (ккал)</label><input type="text" id="editCaloriesInput" class="dark-input" placeholder="Например: 1000"></div><button id="saveCaloriesBtn">Сохранить</button><button id="closeCaloriesModal" class="secondary" style="margin-top:12px;">Отмена</button></div></div>
 
 <script type="module">
     // ---------- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ----------
@@ -263,7 +263,36 @@
     // ---------- ВСПОМОГАТЕЛЬНЫЕ ----------
     function getToday() { return new Date().toISOString().slice(0, 10); }
     function formatDateToDMY(d) { if (!d) return ""; let p = d.split('-'); return p.length === 3 ? `${p[2]}.${p[1]}.${p[0]}` : d; }
-    function parseCalories(i) { if (!i) return null; let s = i.trim(); if (s.includes('+')) { let parts = s.split('+'), t = 0; for (let p of parts) { let n = parseFloat(p); if (!isNaN(n)) t += n; } return t; } let n = parseFloat(s); return isNaN(n) ? null : n; }
+    
+    // ИСПРАВЛЕННАЯ ФУНКЦИЯ ПАРСИНГА КАЛОРИЙ
+    function parseCalories(input) {
+        if (!input || input.trim() === "") return null;
+        let str = input.toString().trim();
+        // Убираем все буквы, оставляем только цифры, + и -
+        str = str.replace(/[^0-9+\-]/g, '');
+        if (str === "") return null;
+        if (str.includes('+')) {
+            let parts = str.split('+');
+            let total = 0;
+            for (let p of parts) {
+                let num = parseFloat(p);
+                if (!isNaN(num)) total += num;
+            }
+            return total;
+        }
+        if (str.includes('-')) {
+            let parts = str.split('-');
+            let total = parseFloat(parts[0]) || 0;
+            for (let i = 1; i < parts.length; i++) {
+                let num = parseFloat(parts[i]);
+                if (!isNaN(num)) total -= num;
+            }
+            return total;
+        }
+        let num = parseFloat(str);
+        return isNaN(num) ? null : num;
+    }
+    
     function calculate1RM(w, r, e) { return Math.round(w * (1 + r / 30) * (0.7 + (e / 10) * 0.3)); }
     
     function saveLocal() { localStorage.setItem('fitness_data', JSON.stringify({ foodEntries, trainingHistory, customExercises, bodyWeightHistory, nextId, workoutExercisesOrder, currentWorkout })); }
@@ -314,7 +343,7 @@
         }
         for (let [product, nutrition] of Object.entries(productDatabase)) {
             if (lowerQuery.includes(product.toLowerCase()) || product.toLowerCase().includes(lowerQuery)) {
-                return { product, nutrition };
+                                return { product, nutrition };
             }
         }
         const words = lowerQuery.split(/\s+/);
@@ -332,7 +361,7 @@
     async function addFoodItem(name, weight, nutrition) {
         const date = document.getElementById('foodDate').value || getToday();
         const ratio = weight / 100;
-                foodEntries.push({ id: Date.now(), date, name, weight, protein: nutrition.protein * ratio, fat: nutrition.fat * ratio, carbs: nutrition.carbs * ratio, kcal: nutrition.kcal * ratio });
+        foodEntries.push({ id: Date.now(), date, name, weight, protein: nutrition.protein * ratio, fat: nutrition.fat * ratio, carbs: nutrition.carbs * ratio, kcal: nutrition.kcal * ratio });
         renderFoodList(); updateFoodCharts(); saveLocal(); await syncToCloud();
     }
     
@@ -476,20 +505,35 @@
         document.querySelectorAll('.delete-exercise-btn').forEach(btn => btn.addEventListener('click', function() { let exercise = this.dataset.exercise; if (exercise) { currentWorkout[exercise] = []; workoutExercisesOrder = workoutExercisesOrder.filter(e => e !== exercise); renderExercises(); saveLocal(); syncToCloud(); } }));
     }
     
+    // Исправленное сохранение тренировки с калориями
     document.getElementById('saveAllWorkoutsBtn')?.addEventListener('click', async () => {
         let date = document.getElementById('workoutDate').value;
         if (!date) { alert('Выберите дату'); return; }
         let saved = 0;
+        let caloriesValue = parseCalories(document.getElementById('caloriesInput').value);
+        
         for (let ex of workoutExercisesOrder) {
             let sets = currentWorkout[ex];
             if (sets && sets.length) {
-                trainingHistory.push({ id: nextId++, date, exercise: ex, sets: sets.map(s => ({ weight: s.weight, weightType: s.type || 'kg', reps: s.reps, effort: s.effort || 7 })), calories: parseCalories(document.getElementById('caloriesInput').value) });
+                trainingHistory.push({ 
+                    id: nextId++, 
+                    date, 
+                    exercise: ex, 
+                    sets: sets.map(s => ({ weight: s.weight, weightType: s.type || 'kg', reps: s.reps, effort: s.effort || 7 })), 
+                    calories: caloriesValue
+                });
                 saved++;
                 currentWorkout[ex] = [];
             }
         }
         workoutExercisesOrder = [];
-        if (saved) { renderExercises(); saveLocal(); await syncToCloud(); alert(`Сохранено ${saved} упражнений`); }
+        if (saved) { 
+            renderExercises(); 
+            saveLocal(); 
+            await syncToCloud(); 
+            document.getElementById('caloriesInput').value = '';
+            alert(`Сохранено ${saved} упражнений, калории: ${caloriesValue || 0}`); 
+        }
         else alert('Нет подходов');
     });
     
@@ -836,8 +880,7 @@
     document.getElementById('closeCaloriesModal')?.addEventListener('click', () => {
         document.getElementById('editCaloriesModal').style.display = 'none';
     });
-    
-    function renderFoodHistory() {
+        function renderFoodHistory() {
         let container = document.getElementById('food-history-container');
         if (!container) return;
         if (!foodEntries.length) { container.innerHTML = '<div style="padding:20px;text-align:center;">Нет записей о еде</div>'; return; }
@@ -847,7 +890,7 @@
         for (let date in grouped) {
             let dayDiv = document.createElement('div'); dayDiv.className = 'history-day';
             let totalKcal = grouped[date].reduce((s, f) => s + f.kcal, 0);
-                        let totalProtein = grouped[date].reduce((s, f) => s + f.protein, 0);
+            let totalProtein = grouped[date].reduce((s, f) => s + f.protein, 0);
             let totalFat = grouped[date].reduce((s, f) => s + f.fat, 0);
             let totalCarbs = grouped[date].reduce((s, f) => s + f.carbs, 0);
             dayDiv.innerHTML = `<div class="history-day-header"><span>📅 ${formatDateToDMY(date)}</span><span>🔥 ${Math.round(totalKcal)} ккал | Б:${totalProtein.toFixed(1)} Ж:${totalFat.toFixed(1)} У:${totalCarbs.toFixed(1)}</span><button class="round-delete delete-food-day" data-date="${date}">🗑</button></div><div id="food-day-${date.replace(/-/g, '')}"></div>`;
