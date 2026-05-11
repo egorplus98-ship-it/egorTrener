@@ -288,7 +288,6 @@
 function parseCalories(input) {
     if (!input || input.trim() === "") return null;
     let str = input.toString().trim();
-    // Убираем все буквы, оставляем только цифры, + и -
     str = str.replace(/[^0-9+\-]/g, '');
     if (str === "") return null;
     if (str.includes('+')) {
