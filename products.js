@@ -1,5 +1,5 @@
 // products.js — база продуктов (КБЖУ на 100г)
-const PRODUCTS_DATABASE = {
+const BUILTIN_PRODUCTS = {
     // Крупы и гарниры
     "рис": { protein: 2.7, fat: 0.3, carbs: 28, kcal: 130 },
     "гречка": { protein: 12.6, fat: 3.3, carbs: 62, kcal: 313 },
