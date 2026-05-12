@@ -552,25 +552,75 @@
     
     // ---------- РЕНДЕР УПРАВЛЕНИЯ ПРОДУКТАМИ (ТОЛЬКО ПРОСМОТР, БЕЗ КНОПКИ ДОБАВЛЕНИЯ) ----------
     function renderProductManagerLists() {
-        // Встроенные продукты
-        const builtinContainer = document.getElementById('builtin-products-container');
-        if (builtinContainer) {
-            builtinContainer.innerHTML = '';
-            for (let [name, nutrition] of Object.entries(builtinProducts)) {
-                const div = document.createElement('div');
-                div.className = 'product-item';
-                div.innerHTML = `
-                    <div>
-                        <div class="product-name">${name}</div>
-                        <div class="product-nutrition">Б:${nutrition.protein} Ж:${nutrition.fat} У:${nutrition.carbs} Ккал:${nutrition.kcal}</div>
-                    </div>
-                    <div class="action-buttons">
-                        <span style="font-size:11px; color:#9ba1bc;">📦 встроенный</span>
-                    </div>
-                `;
-                builtinContainer.appendChild(div);
-            }
+    // Встроенные продукты
+    const builtinContainer = document.getElementById('builtin-products-container');
+    if (builtinContainer) {
+        builtinContainer.innerHTML = '';
+        for (let [name, nutrition] of Object.entries(builtinProducts)) {
+            const div = document.createElement('div');
+            div.className = 'product-item';
+            div.innerHTML = `
+                <div>
+                    <div class="product-name">${name}</div>
+                    <div class="product-nutrition">Б:${nutrition.protein} Ж:${nutrition.fat} У:${nutrition.carbs} Ккал:${nutrition.kcal}</div>
+                </div>
+                <div class="action-buttons">
+                    <span style="font-size:11px; color:#9ba1bc;">📦 встроенный</span>
+                </div>
+            `;
+            builtinContainer.appendChild(div);
         }
+        console.log(`Загружено встроенных продуктов: ${Object.keys(builtinProducts).length}`);
+    } else {
+        console.error('builtin-products-container не найден');
+    }
+    
+    // Пользовательские продукты
+    const customContainer = document.getElementById('custom-products-container');
+    if (customContainer) {
+        customContainer.innerHTML = '';
+        for (let [name, nutrition] of Object.entries(customProducts)) {
+            const div = document.createElement('div');
+            div.className = 'product-item';
+            div.innerHTML = `
+                <div>
+                    <div class="product-name">${name}</div>
+                    <div class="product-nutrition">Б:${nutrition.protein} Ж:${nutrition.fat} У:${nutrition.carbs} Ккал:${nutrition.kcal}</div>
+                </div>
+                <div class="action-buttons">
+                    <button class="round-edit edit-custom-product" data-name="${name}">✏️</button>
+                    <button class="round-delete delete-custom-product" data-name="${name}">✕</button>
+                </div>
+            `;
+            customContainer.appendChild(div);
+        }
+        
+        document.querySelectorAll('.edit-custom-product').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const name = btn.dataset.name;
+                const product = customProducts[name];
+                if (product) {
+                    document.getElementById('editProductOldName').value = name;
+                    document.getElementById('editProductName').value = name;
+                    document.getElementById('editProductProtein').value = product.protein;
+                    document.getElementById('editProductFat').value = product.fat;
+                    document.getElementById('editProductCarbs').value = product.carbs;
+                    document.getElementById('editProductKcal').value = product.kcal;
+                    document.getElementById('editCustomProductModal').style.display = 'flex';
+                }
+            });
+        });
+        
+        document.querySelectorAll('.delete-custom-product').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const name = btn.dataset.name;
+                if (confirm(`Удалить продукт "${name}"?`)) {
+                    await deleteCustomProduct(name);
+                }
+            });
+        });
+    }
+}
         
         // Пользовательские продукты
         const customContainer = document.getElementById('custom-products-container');
