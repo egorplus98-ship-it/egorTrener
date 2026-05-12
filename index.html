@@ -1053,28 +1053,24 @@ function parseCalories(input) {
 </script>
 <script>
     // Отладка Firebase на телефоне
-    window.addEventListener('load', async () => {
-        setTimeout(async () => {
+   <script>
+    // Отладка Firebase на телефоне (безопасный код)
+    setTimeout(async () => {
+        try {
             if (window.auth && window.db) {
                 const user = window.auth.currentUser;
                 if (user) {
-                    alert(`Авторизован: ${user.email}`);
-                    const userDocRef = window.doc(window.db, "users", user.uid);
-                    const docSnap = await window.getDoc(userDocRef);
-                    if (docSnap.exists()) {
-                        const data = docSnap.data();
-                        alert(`Данные в облаке: тренировок ${data.trainingHistory?.length || 0}, еды ${data.foodEntries?.length || 0}`);
-                    } else {
-                        alert('В облаке нет данных!');
-                    }
+                    alert(`✅ Авторизован: ${user.email}`);
                 } else {
-                    alert('Не авторизован!');
+                    alert('❌ Не авторизован! Войдите в аккаунт');
                 }
             } else {
-                alert('Firebase не инициализирован!');
+                alert('❌ Firebase не инициализирован!');
             }
-        }, 2000);
-    });
+        } catch(e) {
+            console.log('Debug error:', e);
+        }
+    }, 3000);
 </script>
 </body>
 </html>
