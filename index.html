@@ -2,11 +2,11 @@
 <html lang="ru">
 <head>
     <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#ff7b2c">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Железный трекер">
-<link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="theme-color" content="#ff7b2c">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Железный трекер">
+    <link rel="apple-touch-icon" href="icon-192.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
     <title>💪 Железный трекер — Firebase</title>
@@ -16,7 +16,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, getDocs, addDoc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, getDocs, addDoc, deleteDoc, updateDoc, query, where } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDCsFzRcG3qpS7kL42QZwsLho8eh8EirNY",
@@ -44,6 +44,8 @@
         window.addDoc = addDoc;
         window.deleteDoc = deleteDoc;
         window.updateDoc = updateDoc;
+        window.query = query;
+        window.where = where;
     </script>
 
     <style>
@@ -187,7 +189,7 @@
         <div id="bju-chart-container" class="chart-container"><canvas id="bjuChart" height="200"></canvas></div></div></div>
         <div class="card"><h2>⚖️ Вес тела</h2><canvas id="weightChart" height="160"></canvas></div></div>
 
-        <div id="ai-page" class="page"><div class="card"><button id="copyJsonBtn">📋 Копировать JSON</button></div><div class="card"><button id="smartAdviceBtn">✨ Рекомендация</button><div id="adviceOutput" style="background:#0a0e16; border-radius: 16px; padding: 14px; margin-top: 12px;"></div></div></div>
+        <div id="ai-page" class="page"><div class="card"><button id="copyJsonBtn">📋 Копировать JSON</button><button id="importJsonBtn" class="secondary" style="margin-top:8px;">📂 Импорт JSON</button><input type="file" id="importFileInput" accept=".json" style="display:none;"></div><div class="card"><button id="smartAdviceBtn">✨ Рекомендация</button><div id="adviceOutput" style="background:#0a0e16; border-radius: 16px; padding: 14px; margin-top: 12px;"></div></div></div>
     </div>
 </div>
 
@@ -230,105 +232,39 @@
     function getToday() { return new Date().toISOString().slice(0, 10); }
     function formatDateToDMY(d) { if (!d) return ""; let p = d.split('-'); return p.length === 3 ? `${p[2]}.${p[1]}.${p[0]}` : d; }
     
-    // ЕДИНСТВЕННАЯ ПРАВИЛЬНАЯ ФУНКЦИЯ parseCalories
-function parseCalories(input) {
-    if (!input || input.trim() === "") return null;
-    let str = input.toString().trim();
-    // Оставляем только цифры, плюсы и минусы
-    str = str.replace(/[^0-9+\-]/g, '');
-    if (str === "") return null;
-    if (str.includes('+')) {
-        let parts = str.split('+');
-        let total = 0;
-        for (let p of parts) {
-            let num = parseFloat(p);
-            if (!isNaN(num)) total += num;
+    function parseCalories(input) {
+        if (!input || input.trim() === "") return null;
+        let str = input.toString().trim();
+        str = str.replace(/[^0-9+\-]/g, '');
+        if (str === "") return null;
+        if (str.includes('+')) {
+            let parts = str.split('+');
+            let total = 0;
+            for (let p of parts) {
+                let num = parseFloat(p);
+                if (!isNaN(num)) total += num;
+            }
+            return total;
         }
-        return total;
-    }
-    if (str.includes('-')) {
-        let parts = str.split('-');
-        let total = parseFloat(parts[0]) || 0;
-        for (let i = 1; i < parts.length; i++) {
-            let num = parseFloat(parts[i]);
-            if (!isNaN(num)) total -= num;
+        if (str.includes('-')) {
+            let parts = str.split('-');
+            let total = parseFloat(parts[0]) || 0;
+            for (let i = 1; i < parts.length; i++) {
+                let num = parseFloat(parts[i]);
+                if (!isNaN(num)) total -= num;
+            }
+            return total;
         }
-        return total;
+        let num = parseFloat(str);
+        return isNaN(num) ? null : num;
     }
-    let num = parseFloat(str);
-    return isNaN(num) ? null : num;
-}
     
     function calculate1RM(w, r, e) { return Math.round(w * (1 + r / 30) * (0.7 + (e / 10) * 0.3)); }
     
-    function saveLocal() { localStorage.setItem('fitness_data', JSON.stringify({ foodEntries, trainingHistory, customExercises, bodyWeightHistory, nextId, workoutExercisesOrder, currentWorkout })); }
-    function loadLocal() { let s = localStorage.getItem('fitness_data'); if (s) { let d = JSON.parse(s); foodEntries = d.foodEntries || []; trainingHistory = d.trainingHistory || []; customExercises = d.customExercises || customExercises; bodyWeightHistory = d.bodyWeightHistory || []; nextId = d.nextId || 1; workoutExercisesOrder = d.workoutExercisesOrder || []; currentWorkout = d.currentWorkout || {}; } }
+    function saveLocal() { localStorage.setItem('fitness_data', JSON.stringify({ foodEntries, trainingHistory, customExercises, bodyWeightHistory, nextId, workoutExercisesOrder, currentWorkout, productDatabase })); }
+    function loadLocal() { let s = localStorage.getItem('fitness_data'); if (s) { let d = JSON.parse(s); foodEntries = d.foodEntries || []; trainingHistory = d.trainingHistory || []; customExercises = d.customExercises || customExercises; bodyWeightHistory = d.bodyWeightHistory || []; nextId = d.nextId || 1; workoutExercisesOrder = d.workoutExercisesOrder || []; currentWorkout = d.currentWorkout || {}; productDatabase = d.productDatabase || productDatabase; productList = Object.keys(productDatabase).map(name => ({ name, ...productDatabase[name] })); } }
     
-    // ---------- ЗАГРУЗКА БАЗЫ ПРОДУКТОВ ИЗ FIREBASE ----------
-    async function loadProductDatabase() {
-        if (!currentUser) return;
-        try {
-            const userDocRef = doc(db, "users", currentUser.uid);
-            const userSnap = await getDoc(userDocRef);
-            if (userSnap.exists() && userSnap.data().productDatabase) {
-                productDatabase = userSnap.data().productDatabase;
-                productList = Object.keys(productDatabase).map(name => ({ name, ...productDatabase[name] }));
-            } else {
-                productDatabase = {
-                    "куриная грудка": { protein: 31, fat: 3.6, carbs: 0, kcal: 165 },
-                    "курица": { protein: 31, fat: 3.6, carbs: 0, kcal: 165 },
-                    "рис": { protein: 2.7, fat: 0.3, carbs: 28, kcal: 130 },
-                    "гречка": { protein: 12.6, fat: 3.3, carbs: 62, kcal: 313 },
-                    "овсянка": { protein: 12, fat: 6, carbs: 62, kcal: 350 },
-                    "яйцо": { protein: 13, fat: 11, carbs: 0.7, kcal: 155 },
-                    "творог": { protein: 18, fat: 9, carbs: 3, kcal: 165 },
-                    "банан": { protein: 1.1, fat: 0.3, carbs: 23, kcal: 96 },
-                    "яблоко": { protein: 0.3, fat: 0.2, carbs: 14, kcal: 52 },
-                    "хлеб": { protein: 8, fat: 2, carbs: 48, kcal: 250 },
-                    "картофель": { protein: 2, fat: 0.4, carbs: 17, kcal: 77 }
-                };
-                productList = Object.keys(productDatabase).map(name => ({ name, ...productDatabase[name] }));
-                await syncProductDatabaseToCloud();
-            }
-        } catch (e) { console.error("Error loading products:", e); }
-    }
-    
-    async function syncProductDatabaseToCloud() {
-        if (!currentUser) return;
-        try {
-            const userDocRef = doc(db, "users", currentUser.uid);
-            await setDoc(userDocRef, { productDatabase }, { merge: true });
-        } catch (e) { console.error("Sync products error:", e); }
-    }
-    
-    function findProductInDatabase(query) {
-        const lowerQuery = query.toLowerCase().trim();
-        for (let [product, nutrition] of Object.entries(productDatabase)) {
-            if (product.toLowerCase() === lowerQuery) return { product, nutrition };
-        }
-        for (let [product, nutrition] of Object.entries(productDatabase)) {
-            if (lowerQuery.includes(product.toLowerCase()) || product.toLowerCase().includes(lowerQuery)) {
-                return { product, nutrition };
-            }
-        }
-        const words = lowerQuery.split(/\s+/);
-        for (let [product, nutrition] of Object.entries(productDatabase)) {
-            for (let word of words) {
-                if (word.length > 2 && (product.toLowerCase().includes(word) || word.includes(product.toLowerCase()))) {
-                    return { product, nutrition };
-                }
-            }
-        }
-        return null;
-    }
-    
-    async function addFoodItem(name, weight, nutrition) {
-        const date = document.getElementById('foodDate').value || getToday();
-        const ratio = weight / 100;
-               foodEntries.push({ id: Date.now(), date, name, weight, protein: nutrition.protein * ratio, fat: nutrition.fat * ratio, carbs: nutrition.carbs * ratio, kcal: nutrition.kcal * ratio });
-        renderFoodList(); updateFoodCharts(); saveLocal(); await syncToCloud();
-    }
-    
+    // ---------- FIREBASE ----------
     async function syncToCloud() {
         if (!currentUser) return;
         const syncStatus = document.getElementById('syncStatus');
@@ -342,7 +278,8 @@ function parseCalories(input) {
             }, { merge: true });
             if (syncStatus) syncStatus.innerHTML = '✅ синхр.';
             setTimeout(() => { if (syncStatus) syncStatus.innerHTML = '☁️ синхр.'; }, 2000);
-        } catch (e) { console.error("Sync error:", e); if (syncStatus) syncStatus.innerHTML = '❌ ошибка'; }
+            alert('Синхронизация завершена!');
+        } catch (e) { console.error("Sync error:", e); if (syncStatus) syncStatus.innerHTML = '❌ ошибка'; alert('Ошибка синхронизации: ' + e.message); }
     }
     
     async function loadFromCloud() {
@@ -361,89 +298,46 @@ function parseCalories(input) {
                 currentWorkout = data.currentWorkout || {};
                 productDatabase = data.productDatabase || productDatabase;
                 productList = Object.keys(productDatabase).map(name => ({ name, ...productDatabase[name] }));
+                saveLocal();
                 renderAll();
+                alert(`Данные загружены из облака! Тренировок: ${trainingHistory.length}`);
             } else {
                 await syncToCloud();
             }
-        } catch (e) { console.error("Load error:", e); }
+        } catch (e) { console.error("Load error:", e); alert('Ошибка загрузки: ' + e.message); }
     }
     
-    async function syncNow() { await syncToCloud(); alert('Синхронизация завершена!'); }
+    // ---------- ИМПОРТ/ЭКСПОРТ JSON ----------
+    document.getElementById('importJsonBtn')?.addEventListener('click', () => {
+        document.getElementById('importFileInput').click();
+    });
+    document.getElementById('importFileInput')?.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const data = JSON.parse(event.target.result);
+                foodEntries = data.foodEntries || [];
+                trainingHistory = data.trainingHistory || [];
+                customExercises = data.customExercises || customExercises;
+                bodyWeightHistory = data.bodyWeightHistory || [];
+                nextId = data.nextId || 1;
+                workoutExercisesOrder = data.workoutExercisesOrder || [];
+                currentWorkout = data.currentWorkout || {};
+                productDatabase = data.productDatabase || productDatabase;
+                productList = Object.keys(productDatabase).
+                                productList = Object.keys(productDatabase).map(name => ({ name, ...productDatabase[name] }));
+                saveLocal();
+                renderAll();
+                alert('Данные импортированы!');
+                syncToCloud();
+            } catch(e) { alert('Ошибка импорта: ' + e.message); }
+        };
+        reader.readAsText(file);
+    });
     
-    // ---------- УПРАВЛЕНИЕ ПРОДУКТАМИ ----------
-    function renderProductManagerList(filter = '') {
-        const container = document.getElementById('productListContainer');
-        if (!container) return;
-        let filtered = productList;
-        if (filter) {
-            const lowerFilter = filter.toLowerCase();
-            filtered = productList.filter(p => p.name.toLowerCase().includes(lowerFilter));
-        }
-        container.innerHTML = '';
-        filtered.forEach(p => {
-            const div = document.createElement('div');
-            div.className = 'product-item';
-            div.innerHTML = `
-                <div>
-                    <div class="product-name">${p.name}</div>
-                    <div class="product-nutrition">Б:${p.protein} Ж:${p.fat} У:${p.carbs} Ккал:${p.kcal}</div>
-                </div>
-                <div class="action-buttons">
-                    <button class="round-edit edit-product-btn" data-name="${p.name}">✏️</button>
-                    <button class="round-delete delete-product-btn" data-name="${p.name}">✕</button>
-                </div>
-            `;
-            container.appendChild(div);
-        });
-        
-        document.querySelectorAll('.edit-product-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const name = btn.dataset.name;
-                const product = productDatabase[name];
-                if (product) {
-                    document.getElementById('newProductName').value = name;
-                    document.getElementById('newProductProtein').value = product.protein;
-                    document.getElementById('newProductFat').value = product.fat;
-                    document.getElementById('newProductCarbs').value = product.carbs;
-                    document.getElementById('newProductKcal').value = product.kcal;
-                }
-            });
-        });
-        
-        document.querySelectorAll('.delete-product-btn').forEach(btn => {
-            btn.addEventListener('click', async () => {
-                const name = btn.dataset.name;
-                if (confirm(`Удалить продукт "${name}"?`)) {
-                    delete productDatabase[name];
-                    productList = Object.keys(productDatabase).map(n => ({ name: n, ...productDatabase[n] }));
-                    renderProductManagerList();
-                    await syncProductDatabaseToCloud();
-                }
-            });
-        });
-    }
-    
-    async function saveNewProduct() {
-        const name = document.getElementById('newProductName').value.trim();
-        const protein = parseFloat(document.getElementById('newProductProtein').value);
-        const fat = parseFloat(document.getElementById('newProductFat').value);
-        const carbs = parseFloat(document.getElementById('newProductCarbs').value);
-        const kcal = parseFloat(document.getElementById('newProductKcal').value) || (protein * 4 + fat * 9 + carbs * 4);
-        if (!name) { alert('Введите название продукта'); return; }
-        if (isNaN(protein) || isNaN(fat) || isNaN(carbs)) { alert('Введите БЖУ'); return; }
-        productDatabase[name] = { protein, fat, carbs, kcal };
-        productList = Object.keys(productDatabase).map(n => ({ name: n, ...productDatabase[n] }));
-        renderProductManagerList();
-        document.getElementById('newProductName').value = '';
-        document.getElementById('newProductProtein').value = '';
-        document.getElementById('newProductFat').value = '';
-        document.getElementById('newProductCarbs').value = '';
-        document.getElementById('newProductKcal').value = '';
-        await syncProductDatabaseToCloud();
-        alert(`Продукт "${name}" добавлен!`);
-    }
-    
-    // ---------- РЕНДЕР ТРЕНИРОВОК ----------
+    // ---------- ОСТАЛЬНЫЕ ФУНКЦИИ (графики, рендер и т.д.) ----------
     function generateRepOptions(s) { let o = ''; for (let i = 1; i <= 50; i++) o += `<option value="${i}" ${s == i ? 'selected' : ''}>${i}</option>`; return o; }
     function generateEffortOptions(s) { let o = ''; for (let i = 1; i <= 10; i++) o += `<option value="${i}" ${s == i ? 'selected' : ''}>${i}</option>`; return o; }
     
@@ -468,35 +362,21 @@ function parseCalories(input) {
         document.querySelectorAll('.delete-exercise-btn').forEach(btn => btn.addEventListener('click', function() { let exercise = this.dataset.exercise; if (exercise) { currentWorkout[exercise] = []; workoutExercisesOrder = workoutExercisesOrder.filter(e => e !== exercise); renderExercises(); saveLocal(); syncToCloud(); } }));
     }
     
-    // Сохранение тренировки - калории теперь не умножаются
     document.getElementById('saveAllWorkoutsBtn')?.addEventListener('click', async () => {
         let date = document.getElementById('workoutDate').value;
         if (!date) { alert('Выберите дату'); return; }
         let saved = 0;
         let caloriesValue = parseCalories(document.getElementById('caloriesInput').value);
-        
         for (let ex of workoutExercisesOrder) {
             let sets = currentWorkout[ex];
             if (sets && sets.length) {
-                trainingHistory.push({ 
-                    id: nextId++, 
-                    date, 
-                    exercise: ex, 
-                    sets: sets.map(s => ({ weight: s.weight, weightType: s.type || 'kg', reps: s.reps, effort: s.effort || 7 })), 
-                    calories: caloriesValue 
-                });
+                trainingHistory.push({ id: nextId++, date, exercise: ex, sets: sets.map(s => ({ weight: s.weight, weightType: s.type || 'kg', reps: s.reps, effort: s.effort || 7 })), calories: caloriesValue });
                 saved++;
                 currentWorkout[ex] = [];
             }
         }
         workoutExercisesOrder = [];
-        if (saved) { 
-            renderExercises(); 
-            saveLocal(); 
-            await syncToCloud(); 
-            document.getElementById('caloriesInput').value = '';
-            alert(`Сохранено ${saved} упражнений, калории: ${caloriesValue || 0}`); 
-        }
+        if (saved) { renderExercises(); saveLocal(); await syncToCloud(); document.getElementById('caloriesInput').value = ''; alert(`Сохранено ${saved} упражнений, калории: ${caloriesValue || 0}`); }
         else alert('Нет подходов');
     });
     
@@ -533,19 +413,12 @@ function parseCalories(input) {
         customExercises.forEach(ex => { let div = document.createElement('div'); div.className = 'compact-exercise-item'; div.innerHTML = `<span>${ex}</span><button class="small-plus" data-ex="${ex}">+</button>`; container.appendChild(div); });
         document.querySelectorAll('#exercisePickerList .small-plus').forEach(btn => btn.addEventListener('click', () => {
             let exercise = btn.dataset.ex;
-            // Добавляем в конец списка, а не в середину
             if (!currentWorkout[exercise]) currentWorkout[exercise] = [];
             if (currentWorkout[exercise].length === 0) {
                 currentWorkout[exercise].push({ weight: 60, type: 'kg', reps: 8, effort: 7 });
             }
-            // Добавляем в конец порядка
-            if (!workoutExercisesOrder.includes(exercise)) {
-                workoutExercisesOrder.push(exercise);
-            }
-            renderExercises(); 
-            document.getElementById('exercisePickerModal').style.display = 'none'; 
-            saveLocal(); 
-            syncToCloud();
+            if (!workoutExercisesOrder.includes(exercise)) workoutExercisesOrder.push(exercise);
+            renderExercises(); document.getElementById('exercisePickerModal').style.display = 'none'; saveLocal(); syncToCloud();
         }));
         document.getElementById('exercisePickerModal').style.display = 'flex';
     });
@@ -611,6 +484,34 @@ function parseCalories(input) {
     });
     document.getElementById('closeWeightModal')?.addEventListener('click', () => document.getElementById('weightModal').style.display = 'none');
     
+    async function addFoodItem(name, weight, nutrition) {
+        const date = document.getElementById('foodDate').value || getToday();
+        const ratio = weight / 100;
+        foodEntries.push({ id: Date.now(), date, name, weight, protein: nutrition.protein * ratio, fat: nutrition.fat * ratio, carbs: nutrition.carbs * ratio, kcal: nutrition.kcal * ratio });
+        renderFoodList(); updateFoodCharts(); saveLocal(); await syncToCloud();
+    }
+    
+    function findProductInDatabase(query) {
+        const lowerQuery = query.toLowerCase().trim();
+        for (let [product, nutrition] of Object.entries(productDatabase)) {
+            if (product.toLowerCase() === lowerQuery) return { product, nutrition };
+        }
+        for (let [product, nutrition] of Object.entries(productDatabase)) {
+            if (lowerQuery.includes(product.toLowerCase()) || product.toLowerCase().includes(lowerQuery)) {
+                return { product, nutrition };
+            }
+        }
+        const words = lowerQuery.split(/\s+/);
+        for (let [product, nutrition] of Object.entries(productDatabase)) {
+            for (let word of words) {
+                if (word.length > 2 && (product.toLowerCase().includes(word) || word.includes(product.toLowerCase()))) {
+                    return { product, nutrition };
+                }
+            }
+        }
+        return null;
+    }
+    
     document.getElementById('searchProductBtn')?.addEventListener('click', async () => {
         let query = document.getElementById('productSearchInput').value.trim();
         if (!query) return;
@@ -650,18 +551,72 @@ function parseCalories(input) {
         renderProductManagerList();
         document.getElementById('productManagerModal').style.display = 'flex';
     });
-    document.getElementById('productManagerSearchBtn')?.addEventListener('click', () => {
-        renderProductManagerList(document.getElementById('productManagerSearch').value);
-    });
-    document.getElementById('productManagerSearch')?.addEventListener('input', (e) => {
-        renderProductManagerList(e.target.value);
-    });
-    document.getElementById('saveNewProductBtn')?.addEventListener('click', async () => {
-        await saveNewProduct();
-    });
-    document.getElementById('closeProductManagerBtn')?.addEventListener('click', () => {
-        document.getElementById('productManagerModal').style.display = 'none';
-    });
+    
+    function renderProductManagerList(filter = '') {
+        const container = document.getElementById('productListContainer');
+        if (!container) return;
+        let filtered = productList;
+        if (filter) {
+            const lowerFilter = filter.toLowerCase();
+            filtered = productList.filter(p => p.name.toLowerCase().includes(lowerFilter));
+        }
+        container.innerHTML = '';
+        filtered.forEach(p => {
+            const div = document.createElement('div');
+            div.className = 'product-item';
+            div.innerHTML = `<div><div class="product-name">${p.name}</div><div class="product-nutrition">Б:${p.protein} Ж:${p.fat} У:${p.carbs} Ккал:${p.kcal}</div></div><div class="action-buttons"><button class="round-edit edit-product-btn" data-name="${p.name}">✏️</button><button class="round-delete delete-product-btn" data-name="${p.name}">✕</button></div>`;
+            container.appendChild(div);
+        });
+        document.querySelectorAll('.edit-product-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const name = btn.dataset.name;
+                const product = productDatabase[name];
+                if (product) {
+                    document.getElementById('newProductName').value = name;
+                    document.getElementById('newProductProtein').value = product.protein;
+                    document.getElementById('newProductFat').value = product.fat;
+                    document.getElementById('newProductCarbs').value = product.carbs;
+                    document.getElementById('newProductKcal').value = product.kcal;
+                }
+            });
+        });
+        document.querySelectorAll('.delete-product-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const name = btn.dataset.name;
+                if (confirm(`Удалить продукт "${name}"?`)) {
+                    delete productDatabase[name];
+                    productList = Object.keys(productDatabase).map(n => ({ name: n, ...productDatabase[n] }));
+                    renderProductManagerList();
+                    await syncToCloud();
+                }
+            });
+        });
+    }
+    
+    async function saveNewProduct() {
+        const name = document.getElementById('newProductName').value.trim();
+        const protein = parseFloat(document.getElementById('newProductProtein').value);
+        const fat = parseFloat(document.getElementById('newProductFat').value);
+        const carbs = parseFloat(document.getElementById('newProductCarbs').value);
+        const kcal = parseFloat(document.getElementById('newProductKcal').value) || (protein * 4 + fat * 9 + carbs * 4);
+        if (!name) { alert('Введите название продукта'); return; }
+        if (isNaN(protein) || isNaN(fat) || isNaN(carbs)) { alert('Введите БЖУ'); return; }
+        productDatabase[name] = { protein, fat, carbs, kcal };
+        productList = Object.keys(productDatabase).map(n => ({ name: n, ...productDatabase[n] }));
+        renderProductManagerList();
+        document.getElementById('newProductName').value = '';
+        document.getElementById('newProductProtein').value = '';
+        document.getElementById('newProductFat').value = '';
+        document.getElementById('newProductCarbs').value = '';
+        document.getElementById('newProductKcal').value = '';
+        await syncToCloud();
+        alert(`Продукт "${name}" добавлен!`);
+    }
+    
+    document.getElementById('saveNewProductBtn')?.addEventListener('click', async () => { await saveNewProduct(); });
+    document.getElementById('productManagerSearchBtn')?.addEventListener('click', () => { renderProductManagerList(document.getElementById('productManagerSearch').value); });
+    document.getElementById('productManagerSearch')?.addEventListener('input', (e) => { renderProductManagerList(e.target.value); });
+    document.getElementById('closeProductManagerBtn')?.addEventListener('click', () => { document.getElementById('productManagerModal').style.display = 'none'; });
     
     // ---------- ГРАФИКИ ----------
     function updateProgressChart() {
@@ -680,6 +635,7 @@ function parseCalories(input) {
             if (labels.length) charts.progress = new Chart(ctx, { type: 'line', data: { labels, datasets: [{ label: `1ПМ ${exercise}`, data, borderColor: '#ff7b2c', fill: false }] } });
         }
     }
+    
     function updateMaxChart() {
         let ctx = document.getElementById('maxChart')?.getContext('2d');
         if (!ctx) return;
@@ -690,6 +646,7 @@ function parseCalories(input) {
         if (exercises.length) { charts.max = new Chart(ctx, { type: 'bar', data: { labels: exercises, datasets: [{ label: 'Вес (кг)', data: exercises.map(e => last[e].value), backgroundColor: '#ff7b2c' }] } }); }
         else { ctx.fillStyle = '#1e2332'; ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height); ctx.fillStyle = '#9ba1bc'; ctx.fillText('Нет данных', ctx.canvas.width / 2, ctx.canvas.height / 2); }
     }
+    
     function updateFoodCharts() {
         let grouped = {};
         foodEntries.forEach(f => { if (!grouped[f.date]) grouped[f.date] = { kcal: 0, protein: 0, fat: 0, carbs: 0 }; grouped[f.date].kcal += f.kcal; grouped[f.date].protein += f.protein; grouped[f.date].fat += f.fat; grouped[f.date].carbs += f.carbs; });
@@ -708,6 +665,7 @@ function parseCalories(input) {
             charts.bju = new Chart(document.getElementById('bjuChart'), { type: 'bar', data: { labels, datasets: [{ label: 'Белки', data: proteinData, backgroundColor: '#2ecc71' }, { label: 'Жиры', data: fatData, backgroundColor: '#f1c40f' }, { label: 'Углеводы', data: carbsData, backgroundColor: '#3498db' }] } });
         }
     }
+    
     function updateWeightChart() {
         let sorted = [...bodyWeightHistory].sort((a, b) => new Date(a.date) - new Date(b.date));
         let ctx = document.getElementById('weightChart')?.getContext('2d');
@@ -733,6 +691,7 @@ function parseCalories(input) {
             updateWeightHistoryList(); updateWeightChart(); saveLocal(); await syncToCloud();
         }));
     }
+    
     document.getElementById('addWeightBtn')?.addEventListener('click', async () => {
         let date = document.getElementById('weightDateInput').value;
         let weight = parseFloat(document.getElementById('weightValueInput').value);
@@ -765,19 +724,7 @@ function parseCalories(input) {
             let totalCal = grouped[date].reduce((s, w) => s + (w.calories || 0), 0);
             let isOpen = openWorkoutDays.has(date);
             let dayDiv = document.createElement('div'); dayDiv.className = 'history-day';
-            dayDiv.innerHTML = `
-                <div class="history-day-header" data-date="${date}">
-                    <span>📅 ${formatDateToDMY(date)}</span>
-                    <div class="action-buttons">
-                        <span style="font-size:12px;">🔥 ${totalCal} ккал</span>
-                        <button class="round-edit edit-calories-btn" data-date="${date}">✏️</button>
-                        <button class="round-delete delete-day-btn" data-date="${date}">🗑</button>
-                        <span class="small-plus" style="padding:2px 8px;">${isOpen ? '▼' : '▶'}</span>
-                    </div>
-                </div>
-                <div class="workout-history-content ${isOpen ? 'active' : ''}" data-date="${date}">
-                </div>
-            `;
+            dayDiv.innerHTML = `<div class="history-day-header" data-date="${date}"><span>📅 ${formatDateToDMY(date)}</span><div class="action-buttons"><span style="font-size:12px;">🔥 ${totalCal} ккал</span><button class="round-edit edit-calories-btn" data-date="${date}">✏️</button><button class="round-delete delete-day-btn" data-date="${date}">🗑</button><span class="small-plus" style="padding:2px 8px;">${isOpen ? '▼' : '▶'}</span></div></div><div class="workout-history-content ${isOpen ? 'active' : ''}" data-date="${date}"></div>`;
             container.appendChild(dayDiv);
             const contentDiv = dayDiv.querySelector('.workout-history-content');
             grouped[date].forEach(w => {
@@ -785,11 +732,10 @@ function parseCalories(input) {
                 w.sets.forEach(s => { setsHtml += `<div class="history-set-item">▪️ ${s.weightType === 'bw' ? 'Свой вес' : s.weight + ' кг'} × ${s.reps} (💪${s.effort})</div>`; });
                 setsHtml += '</div>';
                 let exDiv = document.createElement('div'); exDiv.className = 'history-exercise';
-                exDiv.innerHTML = `<div style="display:flex;justify-content:space-between;"><b>🏋️ ${w.exercise}</b><div class="action-buttons"><button class="round-delete delete-workout-btn" data-id="${w.id}">🗑</button></div></div>${setsHtml}`;
+                exDiv.innerHTML = `<div style="display:flex;justify-content:space-between;"><b>🏋️ ${w.exercise}</b><button class="round-delete delete-workout-btn" data-id="${w.id}">🗑</button></div>${setsHtml}`;
                 contentDiv.appendChild(exDiv);
             });
         }
-        
         document.querySelectorAll('.history-day-header').forEach(header => {
             header.addEventListener('click', (e) => {
                 if (e.target.classList.contains('edit-calories-btn') || e.target.classList.contains('delete-day-btn') || e.target.classList.contains('delete-workout-btn')) return;
@@ -797,7 +743,6 @@ function parseCalories(input) {
                 toggleWorkoutDay(date);
             });
         });
-        
         document.querySelectorAll('.edit-calories-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -809,7 +754,6 @@ function parseCalories(input) {
                 document.getElementById('editCaloriesModal').style.display = 'flex';
             });
         });
-        
         document.querySelectorAll('.delete-day-btn').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 e.stopPropagation();
@@ -820,7 +764,6 @@ function parseCalories(input) {
                 }
             });
         });
-        
         document.querySelectorAll('.delete-workout-btn').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 e.stopPropagation();
@@ -847,9 +790,7 @@ function parseCalories(input) {
             currentEditWorkoutId = null;
         }
     });
-    document.getElementById('closeCaloriesModal')?.addEventListener('click', () => {
-        document.getElementById('editCaloriesModal').style.display = 'none';
-    });
+    document.getElementById('closeCaloriesModal')?.addEventListener('click', () => { document.getElementById('editCaloriesModal').style.display = 'none'; });
     
     function renderFoodHistory() {
         let container = document.getElementById('food-history-container');
@@ -859,17 +800,17 @@ function parseCalories(input) {
         foodEntries.slice().sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(f => { if (!grouped[f.date]) grouped[f.date] = []; grouped[f.date].push(f); });
         container.innerHTML = '';
         for (let date in grouped) {
-            let dayDiv = document.createElement('div'); dayDiv.className = 'history-day';
-                        let totalKcal = grouped[date].reduce((s, f) => s + f.kcal, 0);
+            let totalKcal = grouped[date].reduce((s, f) => s + f.kcal, 0);
             let totalProtein = grouped[date].reduce((s, f) => s + f.protein, 0);
             let totalFat = grouped[date].reduce((s, f) => s + f.fat, 0);
             let totalCarbs = grouped[date].reduce((s, f) => s + f.carbs, 0);
+            let dayDiv = document.createElement('div'); dayDiv.className = 'history-day';
             dayDiv.innerHTML = `<div class="history-day-header"><span>📅 ${formatDateToDMY(date)}</span><span>🔥 ${Math.round(totalKcal)} ккал | Б:${totalProtein.toFixed(1)} Ж:${totalFat.toFixed(1)} У:${totalCarbs.toFixed(1)}</span><button class="round-delete delete-food-day" data-date="${date}">🗑</button></div><div id="food-day-${date.replace(/-/g, '')}"></div>`;
             container.appendChild(dayDiv);
             const dayContainer = dayDiv.querySelector(`#food-day-${date.replace(/-/g, '')}`);
             grouped[date].forEach(f => {
                 let fDiv = document.createElement('div'); fDiv.className = 'history-exercise';
-                fDiv.innerHTML = `<div style="display:flex;justify-content:space-between;"><b>🍽 ${f.name}</b><button class="round-delete delete-food" data-id="${f.id}">🗑</button></div><div class="history-set-item">${f.weight}г | Б:${f.protein.toFixed(1)} Ж:${f.fat.toFixed(1)} У:${f.carbs.toFixed(1)} — ${Math.round(f.kcal)} ккал</div>`;
+                                fDiv.innerHTML = `<div style="display:flex;justify-content:space-between;"><b>🍽 ${f.name}</b><button class="round-delete delete-food" data-id="${f.id}">🗑</button></div><div class="history-set-item">${f.weight}г | Б:${f.protein.toFixed(1)} Ж:${f.fat.toFixed(1)} У:${f.carbs.toFixed(1)} — ${Math.round(f.kcal)} ккал</div>`;
                 dayContainer.appendChild(fDiv);
             });
         }
@@ -892,7 +833,7 @@ function parseCalories(input) {
         const exportData = { foodEntries, trainingHistory, customExercises, bodyWeightHistory, productDatabase };
         navigator.clipboard.writeText(JSON.stringify(exportData, null, 2)).then(() => alert('JSON скопирован'));
     });
-    document.getElementById('syncCloudBtn')?.addEventListener('click', async () => { await syncNow(); });
+    document.getElementById('syncCloudBtn')?.addEventListener('click', async () => { await syncToCloud(); });
     document.getElementById('smartAdviceBtn')?.addEventListener('click', () => {
         let last = {};
         trainingHistory.slice().sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(w => { if (!last[w.exercise]) last[w.exercise] = w; });
@@ -975,7 +916,7 @@ function parseCalories(input) {
     document.getElementById('productManagerModal')?.addEventListener('click', (e) => { if (e.target === document.getElementById('productManagerModal')) document.getElementById('productManagerModal').style.display = 'none'; });
     document.getElementById('editCaloriesModal')?.addEventListener('click', (e) => { if (e.target === document.getElementById('editCaloriesModal')) document.getElementById('editCaloriesModal').style.display = 'none'; });
 
-    // ---------- АВТОРИЗАЦИЯ ----------
+    // ---------- АВТОРИЗАЦИЯ (ИСПРАВЛЕНА) ----------
     async function handleLogin(email, password) {
         try {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
@@ -983,8 +924,9 @@ function parseCalories(input) {
             document.getElementById('login-page').classList.remove('active-page');
             document.getElementById('app-page').classList.add('active-page');
             document.getElementById('mainTabs').style.display = 'flex';
-            document.getElementById('userEmail').innerText = currentUser.email;
-            await loadProductDatabase();
+            // Исправлено: проверяем существование элемента
+            const userEmailSpan = document.getElementById('userEmail');
+            if (userEmailSpan) userEmailSpan.innerText = currentUser.email;
             await loadFromCloud();
             renderAll();
             document.getElementById('workoutDate').value = getToday();
@@ -1015,14 +957,18 @@ function parseCalories(input) {
             document.getElementById('login-page').classList.remove('active-page');
             document.getElementById('app-page').classList.add('active-page');
             document.getElementById('mainTabs').style.display = 'flex';
-            document.getElementById('userEmail').innerText = currentUser.email;
-            loadProductDatabase().then(() => {
-                loadFromCloud().then(() => {
-                    renderAll();
-                    document.getElementById('workoutDate').value = getToday();
-                    document.getElementById('foodDate').value = getToday();
-                });
+            const userEmailSpan = document.getElementById('userEmail');
+            if (userEmailSpan) userEmailSpan.innerText = currentUser.email;
+            loadFromCloud().then(() => {
+                renderAll();
+                document.getElementById('workoutDate').value = getToday();
+                document.getElementById('foodDate').value = getToday();
             });
+        } else if (!user && currentUser !== null) {
+            currentUser = null;
+            document.getElementById('login-page').classList.add('active-page');
+            document.getElementById('app-page').classList.remove('active-page');
+            document.getElementById('mainTabs').style.display = 'none';
         }
     });
 
@@ -1050,54 +996,15 @@ function parseCalories(input) {
     document.getElementById('foodDate').value = getToday();
     document.getElementById('workoutDate').value = getToday();
     updateWeightChart();
-</script>
-<script>
-    // Отладка Firebase на телефоне (безопасный код)
-    setTimeout(async () => {
-        try {
-            if (window.auth && window.db) {
-                const user = window.auth.currentUser;
-                if (user) {
-                    alert(`✅ Авторизован: ${user.email}`);
-                } else {
-                    alert('❌ Не авторизован! Войдите в аккаунт');
-                }
-            } else {
-                alert('❌ Firebase не инициализирован!');
-            }
-        } catch(e) {
-            console.log('Debug error:', e);
+    
+    // Отладка: выводим статус Firebase
+    setTimeout(() => {
+        if (window.auth && window.auth.currentUser) {
+            console.log('✅ Firebase авторизован:', window.auth.currentUser.email);
+        } else {
+            console.log('❌ Firebase не авторизован');
         }
-    }, 3000);
+    }, 2000);
 </script>
-    <button id="testFirebaseBtn" style="margin-top: 12px; background: #e74c3c;">🔍 Тест Firebase</button>
-
-    <script>
-        document.getElementById('testFirebaseBtn')?.addEventListener('click', async () => {
-            alert('Проверка...');
-            if (!window.auth) {
-                alert('❌ Firebase Auth не инициализирован');
-                return;
-            }
-            const user = window.auth.currentUser;
-            if (!user) {
-                alert('❌ Не авторизован');
-                return;
-            }
-            alert(`✅ Авторизован: ${user.email}`);
-            
-            try {
-                const userDocRef = window.doc(window.db, "users", user.uid);
-                const docSnap = await window.getDoc(userDocRef);
-                if (docSnap.exists()) {
-                    alert(`✅ Данные есть! Тренировок: ${docSnap.data().trainingHistory?.length || 0}`);
-                } else {
-                    alert('❌ В облаке нет данных');
-                }
-            } catch(e) {
-                alert('Ошибка: ' + e.message);
-            }
-        });
-    </script>
 </body>
 </html>
