@@ -1052,8 +1052,6 @@ function parseCalories(input) {
     updateWeightChart();
 </script>
 <script>
-    // Отладка Firebase на телефоне
-   <script>
     // Отладка Firebase на телефоне (безопасный код)
     setTimeout(async () => {
         try {
@@ -1072,5 +1070,34 @@ function parseCalories(input) {
         }
     }, 3000);
 </script>
+    <button id="testFirebaseBtn" style="margin-top: 12px; background: #e74c3c;">🔍 Тест Firebase</button>
+
+    <script>
+        document.getElementById('testFirebaseBtn')?.addEventListener('click', async () => {
+            alert('Проверка...');
+            if (!window.auth) {
+                alert('❌ Firebase Auth не инициализирован');
+                return;
+            }
+            const user = window.auth.currentUser;
+            if (!user) {
+                alert('❌ Не авторизован');
+                return;
+            }
+            alert(`✅ Авторизован: ${user.email}`);
+            
+            try {
+                const userDocRef = window.doc(window.db, "users", user.uid);
+                const docSnap = await window.getDoc(userDocRef);
+                if (docSnap.exists()) {
+                    alert(`✅ Данные есть! Тренировок: ${docSnap.data().trainingHistory?.length || 0}`);
+                } else {
+                    alert('❌ В облаке нет данных');
+                }
+            } catch(e) {
+                alert('Ошибка: ' + e.message);
+            }
+        });
+    </script>
 </body>
 </html>
