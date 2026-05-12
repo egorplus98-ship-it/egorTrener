@@ -125,6 +125,8 @@
         .products-tab-btn { background: #2a2f40; border: none; padding: 8px 16px; border-radius: 30px; color: #ffd1b0; cursor: pointer; flex: 1; text-align: center; }
         .products-tab-btn.active { background: #ff7b2c; color: black; }
         .products-list { max-height: 400px; overflow-y: auto; }
+        .modal-buttons { display: flex; gap: 12px; margin-top: 16px; }
+        .modal-buttons button { flex: 1; margin-top: 0; }
         @media (max-width: 500px) {
             .set-header { grid-template-columns: 25px 60px 75px 60px 55px 28px; gap: 4px; }
             .set-row { grid-template-columns: 25px 60px 75px 60px 55px 28px; gap: 4px; }
@@ -210,12 +212,12 @@
 <div id="profileModal" class="modal-overlay"><div class="modal-window"><h2>Мои данные</h2><div class="profile-field"><label>Рост (см)</label><input type="number" id="userHeight" class="dark-input" placeholder="175"></div><div class="profile-field"><label>Вес (кг)</label><input type="number" id="userWeight" class="dark-input" placeholder="75"></div><div class="profile-field"><label>Пол</label><select id="userGender" class="dark-select"><option>Мужской</option><option>Женский</option></select></div><div class="profile-field"><label>Возраст</label><input type="number" id="userAge" class="dark-input" placeholder="25"></div><h3>📋 Список упражнений</h3><div id="exerciseManageList" class="exercise-list-compact"></div><div class="input-row"><input type="text" id="newExerciseNameInput" placeholder="Новое упражнение" class="dark-input" style="flex:1;"><button id="addExerciseFromModalBtn" class="small-btn">➕</button></div><h3>⚖️ Вес тела</h3><div class="input-row"><input type="date" id="weightDateInput" class="date-input"><input type="number" id="weightValueInput" placeholder="кг" class="dark-input" style="flex:1;"><button id="addWeightBtn" class="small-btn">+</button></div><div id="weightHistoryList"></div><button id="closeProfileBtn" class="secondary">Закрыть</button></div></div>
 <div id="exercisePickerModal" class="modal-overlay"><div class="modal-window"><h3>➕ Выбрать упражнение</h3><div id="exercisePickerList" class="exercise-list-compact"></div><button id="closePickerBtn" class="secondary">Отмена</button></div></div>
 <div id="orderModal" class="modal-overlay"><div class="modal-window"><h3>🔢 Порядок</h3><p id="orderExerciseName"></p><div class="input-row"><input type="number" id="orderNumberInput" placeholder="Номер" class="dark-input"><button id="confirmOrderBtn">Переместить</button></div><button id="closeOrderBtn" class="secondary">Отмена</button></div></div>
-<div id="addFoodModal" class="modal-overlay"><div class="modal-window"><h3>➕ Добавить продукт в еду</h3><div class="profile-field"><label>Продукт</label><input type="text" id="manualFoodName" class="dark-input"></div><div class="profile-field"><label>Вес (г)</label><input type="number" id="manualFoodWeight" class="dark-input" value="100"></div><div class="profile-field"><label>Белки (на 100г)</label><input type="number" id="manualFoodProtein" class="dark-input"></div><div class="profile-field"><label>Жиры (на 100г)</label><input type="number" id="manualFoodFat" class="dark-input"></div><div class="profile-field"><label>Углеводы (на 100г)</label><input type="number" id="manualFoodCarbs" class="dark-input"></div><div class="profile-field"><label>Ккал (на 100г)</label><input type="number" id="manualFoodKcal" class="dark-input"></div><button id="confirmAddFoodBtn">Добавить</button><button id="closeAddFoodModal" class="secondary">Отмена</button></div></div>
-<div id="addToBaseModal" class="modal-overlay"><div class="modal-window"><h3>📦 Добавить в базу продуктов</h3><div class="profile-field"><label>Название</label><input type="text" id="baseProductName" class="dark-input"></div><div class="profile-field"><label>Белки (на 100г)</label><input type="number" id="baseProductProtein" class="dark-input"></div><div class="profile-field"><label>Жиры (на 100г)</label><input type="number" id="baseProductFat" class="dark-input"></div><div class="profile-field"><label>Углеводы (на 100г)</label><input type="number" id="baseProductCarbs" class="dark-input"></div><div class="profile-field"><label>Ккал (на 100г)</label><input type="number" id="baseProductKcal" class="dark-input"></div><button id="confirmAddToBaseBtn">➕ Добавить в базу</button><button id="closeAddToBaseModal" class="secondary" style="margin-top:12px;">Отмена</button></div></div>
-<div id="weightModal" class="modal-overlay"><div class="modal-window"><h3>⚖️ Вес порции</h3><p id="weightProductName"></p><div class="profile-field"><label>Граммы</label><input type="number" id="selectedWeight" class="dark-input" value="100"></div><button id="confirmWeightBtn">Добавить</button><button id="closeWeightModal" class="secondary">Отмена</button></div></div>
-<div id="productManagerModal" class="modal-overlay"><div class="modal-window"><h2>📋 База данных продуктов</h2><div class="products-tabs"><button class="products-tab-btn active" data-products-tab="builtin">📦 Встроенные</button><button class="products-tab-btn" data-products-tab="custom">🌟 Мои продукты</button></div><div id="builtin-products-container" class="products-list"></div><div id="custom-products-container" class="products-list" style="display:none;"></div><div style="margin-top:12px;"><button id="addCustomProductFromManagerBtn" class="small-btn">➕ Добавить продукт</button></div><button id="closeProductManagerBtn" class="secondary" style="margin-top:12px;">Закрыть</button></div></div>
-<div id="editCustomProductModal" class="modal-overlay"><div class="modal-window"><h3>✏️ Редактировать продукт</h3><input type="hidden" id="editProductOldName"><div class="profile-field"><label>Название</label><input type="text" id="editProductName" class="dark-input"></div><div class="profile-field"><label>Белки (на 100г)</label><input type="number" id="editProductProtein" class="dark-input"></div><div class="profile-field"><label>Жиры (на 100г)</label><input type="number" id="editProductFat" class="dark-input"></div><div class="profile-field"><label>Углеводы (на 100г)</label><input type="number" id="editProductCarbs" class="dark-input"></div><div class="profile-field"><label>Ккал (на 100г)</label><input type="number" id="editProductKcal" class="dark-input"></div><button id="saveEditedProductBtn">Сохранить</button><button id="closeEditProductModal" class="secondary" style="margin-top:12px;">Отмена</button></div></div>
-<div id="editCaloriesModal" class="modal-overlay"><div class="modal-window"><h3>✏️ Редактировать калории</h3><div class="profile-field"><label>Калории (ккал)</label><input type="text" id="editCaloriesInput" class="dark-input" placeholder="Например: 1000"></div><button id="saveCaloriesBtn">Сохранить</button><button id="closeCaloriesModal" class="secondary" style="margin-top:12px;">Отмена</button></div></div>
+<div id="addFoodModal" class="modal-overlay"><div class="modal-window"><h3>➕ Добавить продукт в еду</h3><div class="profile-field"><label>Продукт</label><input type="text" id="manualFoodName" class="dark-input"></div><div class="profile-field"><label>Вес (г)</label><input type="number" id="manualFoodWeight" class="dark-input" value="100"></div><div class="profile-field"><label>Белки (на 100г)</label><input type="number" id="manualFoodProtein" class="dark-input"></div><div class="profile-field"><label>Жиры (на 100г)</label><input type="number" id="manualFoodFat" class="dark-input"></div><div class="profile-field"><label>Углеводы (на 100г)</label><input type="number" id="manualFoodCarbs" class="dark-input"></div><div class="profile-field"><label>Ккал (на 100г)</label><input type="number" id="manualFoodKcal" class="dark-input"></div><div class="modal-buttons"><button id="confirmAddFoodBtn">Добавить</button><button id="closeAddFoodModal" class="secondary">Отмена</button></div></div></div>
+<div id="addToBaseModal" class="modal-overlay"><div class="modal-window"><h3>📦 Добавить в базу продуктов</h3><div class="profile-field"><label>Название</label><input type="text" id="baseProductName" class="dark-input"></div><div class="profile-field"><label>Белки (на 100г)</label><input type="number" id="baseProductProtein" class="dark-input"></div><div class="profile-field"><label>Жиры (на 100г)</label><input type="number" id="baseProductFat" class="dark-input"></div><div class="profile-field"><label>Углеводы (на 100г)</label><input type="number" id="baseProductCarbs" class="dark-input"></div><div class="profile-field"><label>Ккал (на 100г)</label><input type="number" id="baseProductKcal" class="dark-input"></div><div class="modal-buttons"><button id="confirmAddToBaseBtn">➕ Добавить</button><button id="closeAddToBaseModal" class="secondary">Отмена</button></div></div></div>
+<div id="weightModal" class="modal-overlay"><div class="modal-window"><h3>⚖️ Вес порции</h3><p id="weightProductName"></p><div class="profile-field"><label>Граммы</label><input type="number" id="selectedWeight" class="dark-input" value="100"></div><div class="modal-buttons"><button id="confirmWeightBtn">Добавить</button><button id="closeWeightModal" class="secondary">Отмена</button></div></div></div>
+<div id="productManagerModal" class="modal-overlay"><div class="modal-window"><h2>📋 База данных продуктов</h2><div class="products-tabs"><button class="products-tab-btn active" data-products-tab="builtin">📦 Встроенные</button><button class="products-tab-btn" data-products-tab="custom">🌟 Мои продукты</button></div><div id="builtin-products-container" class="products-list" style="max-height:400px; overflow-y:auto;"></div><div id="custom-products-container" class="products-list" style="max-height:400px; overflow-y:auto; display:none;"></div><button id="closeProductManagerBtn" class="secondary" style="margin-top:12px;">Закрыть</button></div></div>
+<div id="editCustomProductModal" class="modal-overlay"><div class="modal-window"><h3>✏️ Редактировать продукт</h3><input type="hidden" id="editProductOldName"><div class="profile-field"><label>Название</label><input type="text" id="editProductName" class="dark-input"></div><div class="profile-field"><label>Белки (на 100г)</label><input type="number" id="editProductProtein" class="dark-input"></div><div class="profile-field"><label>Жиры (на 100г)</label><input type="number" id="editProductFat" class="dark-input"></div><div class="profile-field"><label>Углеводы (на 100г)</label><input type="number" id="editProductCarbs" class="dark-input"></div><div class="profile-field"><label>Ккал (на 100г)</label><input type="number" id="editProductKcal" class="dark-input"></div><div class="modal-buttons"><button id="saveEditedProductBtn">Сохранить</button><button id="closeEditProductModal" class="secondary">Отмена</button></div></div></div>
+<div id="editCaloriesModal" class="modal-overlay"><div class="modal-window"><h3>✏️ Редактировать калории</h3><div class="profile-field"><label>Калории (ккал)</label><input type="text" id="editCaloriesInput" class="dark-input" placeholder="Например: 1000"></div><div class="modal-buttons"><button id="saveCaloriesBtn">Сохранить</button><button id="closeCaloriesModal" class="secondary">Отмена</button></div></div></div>
 
 <script type="module">
     // ---------- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ----------
@@ -300,11 +302,11 @@
             const userDocRef = doc(db, "users", currentUser.uid);
             await setDoc(userDocRef, {
                 foodEntries, trainingHistory, customExercises, bodyWeightHistory, nextId,
-                workoutExercisesOrder, currentWorkout, customProducts,
+                                workoutExercisesOrder, currentWorkout, customProducts,
                 lastUpdated: new Date().toISOString()
             }, { merge: true });
             if (syncStatus) syncStatus.innerHTML = '✅ синхр.';
-                        setTimeout(() => { if (syncStatus) syncStatus.innerHTML = '☁️ синхр.'; }, 2000);
+            setTimeout(() => { if (syncStatus) syncStatus.innerHTML = '☁️ синхр.'; }, 2000);
         } catch (e) { console.error("Sync error:", e); if (syncStatus) syncStatus.innerHTML = '❌ ошибка'; }
     }
     
@@ -380,7 +382,7 @@
         renderProductManagerLists();
     }
     
-    // ---------- РЕНДЕР УПРАВЛЕНИЯ ПРОДУКТАМИ ----------
+    // ---------- РЕНДЕР УПРАВЛЕНИЯ ПРОДУКТАМИ (ТОЛЬКО ПРОСМОТР, БЕЗ КНОПКИ ДОБАВЛЕНИЯ) ----------
     function renderProductManagerLists() {
         // Встроенные продукты
         const builtinContainer = document.getElementById('builtin-products-container');
@@ -682,11 +684,6 @@
     });
     document.getElementById('closeProductManagerBtn')?.addEventListener('click', () => document.getElementById('productManagerModal').style.display = 'none');
     
-    document.getElementById('addCustomProductFromManagerBtn')?.addEventListener('click', () => {
-        document.getElementById('productManagerModal').style.display = 'none';
-        document.getElementById('addToBaseModal').style.display = 'flex';
-    });
-    
     document.getElementById('saveEditedProductBtn')?.addEventListener('click', async () => {
         const oldName = document.getElementById('editProductOldName').value;
         const newName = document.getElementById('editProductName').value.trim();
@@ -708,14 +705,20 @@
             document.querySelectorAll('.products-tab-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             const tab = btn.dataset.productsTab;
-            document.getElementById('builtin-products-container').style.display = tab === 'builtin' ? 'block' : 'none';
-            document.getElementById('custom-products-container').style.display = tab === 'custom' ? 'block' : 'none';
+            if (tab === 'builtin') {
+                document.getElementById('builtin-products-container').style.display = 'block';
+                document.getElementById('custom-products-container').style.display = 'none';
+            } else {
+                document.getElementById('builtin-products-container').style.display = 'none';
+                document.getElementById('custom-products-container').style.display = 'block';
+            }
         });
     });
     
     document.getElementById('foodDate')?.addEventListener('change', () => renderFoodList());
     
     // ---------- ГРАФИКИ ----------
+    let charts = {};
     function updateProgressChart() {
         let select = document.getElementById('chartExerciseSelect');
         if (!select) return;
@@ -744,7 +747,6 @@
         else { ctx.fillStyle = '#1e2332'; ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height); ctx.fillStyle = '#9ba1bc'; ctx.fillText('Нет данных', ctx.canvas.width / 2, ctx.canvas.height / 2); }
     }
     
-    let charts = {};
     function updateFoodCharts() {
         let grouped = {};
         foodEntries.forEach(f => { if (!grouped[f.date]) grouped[f.date] = { kcal: 0, protein: 0, fat: 0, carbs: 0 }; grouped[f.date].kcal += f.kcal; grouped[f.date].protein += f.protein; grouped[f.date].fat += f.fat; grouped[f.date].carbs += f.carbs; });
@@ -826,8 +828,8 @@
             container.appendChild(dayDiv);
             const contentDiv = dayDiv.querySelector('.workout-history-content');
             grouped[date].forEach(w => {
-                let setsHtml = '<div class="history-sets-list">';
-                               w.sets.forEach(s => { setsHtml += `<div class="history-set-item">▪️ ${s.weightType === 'bw' ? 'Свой вес' : s.weight + ' кг'} × ${s.reps} (💪${s.effort})</div>`; });
+                            let setsHtml = '<div class="history-sets-list">';
+                w.sets.forEach(s => { setsHtml += `<div class="history-set-item">▪️ ${s.weightType === 'bw' ? 'Свой вес' : s.weight + ' кг'} × ${s.reps} (💪${s.effort})</div>`; });
                 setsHtml += '</div>';
                 let exDiv = document.createElement('div'); exDiv.className = 'history-exercise';
                 exDiv.innerHTML = `<div style="display:flex;justify-content:space-between;"><b>🏋️ ${w.exercise}</b><button class="round-delete delete-workout-btn" data-id="${w.id}">🗑</button></div>${setsHtml}`;
@@ -1124,4 +1126,4 @@
     updateWeightChart();
 </script>
 </body>
-</html>
+</html>   
