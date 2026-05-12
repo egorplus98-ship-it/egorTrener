@@ -1,16 +1,13 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#ff7b2c">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Железный трекер">
-    <link rel="apple-touch-icon" href="icon-192.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-    <title>💪 Железный трекер — Firebase</title>
+    <title>💪 Железный трекер</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <!-- Подключаем базу продуктов из отдельного файла -->
+    <script src="products.js"></script>
     
     <!-- Firebase SDK -->
     <script type="module">
@@ -50,9 +47,9 @@
 
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif; background: #0a0c12; color: #eef2ff; padding-bottom: 75px; }
-        .container { max-width: 650px; margin: 0 auto; padding: 12px; }
-        .header-icons { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif; background: #0a0c12; color: #eef2ff; padding-bottom: 80px; }
+        .container { max-width: 650px; margin: 0 auto; padding: 12px; padding-top: env(safe-area-inset-top, 12px); }
+        .header-icons { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; margin-top: 8px; }
         .bicep-icon { font-size: 42px; cursor: pointer; animation: flexBicep 2s ease-in-out infinite; }
         .profile-icon, .sync-icon { background: #1e2332; width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 26px; cursor: pointer; transition: 0.2s; }
         .profile-icon:hover, .sync-icon:hover { background: #ff7b2c; }
@@ -124,6 +121,10 @@
         .dark-select, .dark-input { background: #1e2332; border: 1px solid #2f3548; border-radius: 14px; padding: 10px; color: white; width: 100%; }
         .workout-history-content { display: none; margin-top: 8px; }
         .workout-history-content.active { display: block; }
+        .products-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+        .products-tab-btn { background: #2a2f40; border: none; padding: 8px 16px; border-radius: 30px; color: #ffd1b0; cursor: pointer; flex: 1; text-align: center; }
+        .products-tab-btn.active { background: #ff7b2c; color: black; }
+        .products-list { max-height: 400px; overflow-y: auto; }
         @media (max-width: 500px) {
             .set-header { grid-template-columns: 25px 60px 75px 60px 55px 28px; gap: 4px; }
             .set-row { grid-template-columns: 25px 60px 75px 60px 55px 28px; gap: 4px; }
@@ -166,13 +167,18 @@
         </div>
 
         <div id="food-page" class="page">
-            <div class="card"><div class="input-row"><input type="date" id="foodDate" class="date-input"></div>
-            <div id="dailySummary" class="daily-summary"><div style="text-align:center;">📊 Итого за день</div><div class="summary-grid"><div class="summary-item"><div class="summary-value" id="sumKcal">0</div><div class="summary-label">Ккал</div></div><div class="summary-item"><div class="summary-value" id="sumProtein">0</div><div class="summary-label">Белки</div></div><div class="summary-item"><div class="summary-value" id="sumFat">0</div><div class="summary-label">Жиры</div></div><div class="summary-item"><div class="summary-value" id="sumCarbs">0</div><div class="summary-label">Углеводы</div></div></div></div>
-            <div class="input-row" style="margin-top:12px;"><input type="text" id="productSearchInput" placeholder="Поиск продукта..." class="dark-input" style="flex:1;"><button id="searchProductBtn" class="small-btn">🔍</button></div>
-            <div id="searchResults"></div>
-            <h3>🍽 Съедено:</h3><div id="foodListContainer"></div>
-            <button id="addCustomFoodBtn" class="secondary">➕ Добавить вручную</button>
-            <button id="manageProductsBtn" class="secondary" style="margin-top:8px;">📋 Управление продуктами</button></div>
+            <div class="card">
+                <div class="input-row"><input type="date" id="foodDate" class="date-input"></div>
+                <div id="dailySummary" class="daily-summary"><div style="text-align:center;">📊 Итого за день</div><div class="summary-grid"><div class="summary-item"><div class="summary-value" id="sumKcal">0</div><div class="summary-label">Ккал</div></div><div class="summary-item"><div class="summary-value" id="sumProtein">0</div><div class="summary-label">Белки</div></div><div class="summary-item"><div class="summary-value" id="sumFat">0</div><div class="summary-label">Жиры</div></div><div class="summary-item"><div class="summary-value" id="sumCarbs">0</div><div class="summary-label">Углеводы</div></div></div></div>
+                <div class="input-row" style="margin-top:12px;"><input type="text" id="productSearchInput" placeholder="Поиск продукта..." class="dark-input" style="flex:1;"><button id="searchProductBtn" class="small-btn">🔍</button></div>
+                <div id="searchResults"></div>
+                <h3>🍽 Съедено:</h3><div id="foodListContainer"></div>
+                <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
+                    <button id="addManualFoodBtn" class="secondary" style="flex:1;">➕ Добавить вручную</button>
+                    <button id="addToBaseBtn" class="secondary" style="flex:1;">📦 Добавить в Базу</button>
+                    <button id="manageProductsBtn" class="secondary" style="flex:1;">📋 База данных продуктов</button>
+                </div>
+            </div>
         </div>
 
         <div id="history-page" class="page"><div class="card"><h2>📜 История</h2><div class="history-tabs"><button class="history-tab-btn active" data-history="workout">💪 Тренировки</button><button class="history-tab-btn" data-history="food">🍽 Питание</button></div><div id="workout-history-container" class="history-content active"></div><div id="food-history-container" class="history-content"></div></div></div>
@@ -205,8 +211,10 @@
 <div id="exercisePickerModal" class="modal-overlay"><div class="modal-window"><h3>➕ Выбрать упражнение</h3><div id="exercisePickerList" class="exercise-list-compact"></div><button id="closePickerBtn" class="secondary">Отмена</button></div></div>
 <div id="orderModal" class="modal-overlay"><div class="modal-window"><h3>🔢 Порядок</h3><p id="orderExerciseName"></p><div class="input-row"><input type="number" id="orderNumberInput" placeholder="Номер" class="dark-input"><button id="confirmOrderBtn">Переместить</button></div><button id="closeOrderBtn" class="secondary">Отмена</button></div></div>
 <div id="addFoodModal" class="modal-overlay"><div class="modal-window"><h3>➕ Добавить продукт в еду</h3><div class="profile-field"><label>Продукт</label><input type="text" id="manualFoodName" class="dark-input"></div><div class="profile-field"><label>Вес (г)</label><input type="number" id="manualFoodWeight" class="dark-input" value="100"></div><div class="profile-field"><label>Белки (на 100г)</label><input type="number" id="manualFoodProtein" class="dark-input"></div><div class="profile-field"><label>Жиры (на 100г)</label><input type="number" id="manualFoodFat" class="dark-input"></div><div class="profile-field"><label>Углеводы (на 100г)</label><input type="number" id="manualFoodCarbs" class="dark-input"></div><div class="profile-field"><label>Ккал (на 100г)</label><input type="number" id="manualFoodKcal" class="dark-input"></div><button id="confirmAddFoodBtn">Добавить</button><button id="closeAddFoodModal" class="secondary">Отмена</button></div></div>
+<div id="addToBaseModal" class="modal-overlay"><div class="modal-window"><h3>📦 Добавить в базу продуктов</h3><div class="profile-field"><label>Название</label><input type="text" id="baseProductName" class="dark-input"></div><div class="profile-field"><label>Белки (на 100г)</label><input type="number" id="baseProductProtein" class="dark-input"></div><div class="profile-field"><label>Жиры (на 100г)</label><input type="number" id="baseProductFat" class="dark-input"></div><div class="profile-field"><label>Углеводы (на 100г)</label><input type="number" id="baseProductCarbs" class="dark-input"></div><div class="profile-field"><label>Ккал (на 100г)</label><input type="number" id="baseProductKcal" class="dark-input"></div><button id="confirmAddToBaseBtn">➕ Добавить в базу</button><button id="closeAddToBaseModal" class="secondary" style="margin-top:12px;">Отмена</button></div></div>
 <div id="weightModal" class="modal-overlay"><div class="modal-window"><h3>⚖️ Вес порции</h3><p id="weightProductName"></p><div class="profile-field"><label>Граммы</label><input type="number" id="selectedWeight" class="dark-input" value="100"></div><button id="confirmWeightBtn">Добавить</button><button id="closeWeightModal" class="secondary">Отмена</button></div></div>
-<div id="productManagerModal" class="modal-overlay"><div class="modal-window"><h2>📋 Управление продуктами</h2><div class="input-row"><input type="text" id="productManagerSearch" placeholder="Поиск..." class="dark-input" style="flex:1;"><button id="productManagerSearchBtn" class="small-btn">🔍</button></div><div id="productListContainer" style="max-height: 300px; overflow-y: auto;"></div><h3 style="margin-top:12px;">➕ Добавить новый</h3><div class="profile-field"><label>Название</label><input type="text" id="newProductName" class="dark-input"></div><div class="profile-field"><label>Белки (на 100г)</label><input type="number" id="newProductProtein" class="dark-input"></div><div class="profile-field"><label>Жиры (на 100г)</label><input type="number" id="newProductFat" class="dark-input"></div><div class="profile-field"><label>Углеводы (на 100г)</label><input type="number" id="newProductCarbs" class="dark-input"></div><div class="profile-field"><label>Ккал (на 100г)</label><input type="number" id="newProductKcal" class="dark-input"></div><button id="saveNewProductBtn">➕ Добавить в базу</button><button id="closeProductManagerBtn" class="secondary" style="margin-top:12px;">Закрыть</button></div></div>
+<div id="productManagerModal" class="modal-overlay"><div class="modal-window"><h2>📋 База данных продуктов</h2><div class="products-tabs"><button class="products-tab-btn active" data-products-tab="builtin">📦 Встроенные</button><button class="products-tab-btn" data-products-tab="custom">🌟 Мои продукты</button></div><div id="builtin-products-container" class="products-list"></div><div id="custom-products-container" class="products-list" style="display:none;"></div><div style="margin-top:12px;"><button id="addCustomProductFromManagerBtn" class="small-btn">➕ Добавить продукт</button></div><button id="closeProductManagerBtn" class="secondary" style="margin-top:12px;">Закрыть</button></div></div>
+<div id="editCustomProductModal" class="modal-overlay"><div class="modal-window"><h3>✏️ Редактировать продукт</h3><input type="hidden" id="editProductOldName"><div class="profile-field"><label>Название</label><input type="text" id="editProductName" class="dark-input"></div><div class="profile-field"><label>Белки (на 100г)</label><input type="number" id="editProductProtein" class="dark-input"></div><div class="profile-field"><label>Жиры (на 100г)</label><input type="number" id="editProductFat" class="dark-input"></div><div class="profile-field"><label>Углеводы (на 100г)</label><input type="number" id="editProductCarbs" class="dark-input"></div><div class="profile-field"><label>Ккал (на 100г)</label><input type="number" id="editProductKcal" class="dark-input"></div><button id="saveEditedProductBtn">Сохранить</button><button id="closeEditProductModal" class="secondary" style="margin-top:12px;">Отмена</button></div></div>
 <div id="editCaloriesModal" class="modal-overlay"><div class="modal-window"><h3>✏️ Редактировать калории</h3><div class="profile-field"><label>Калории (ккал)</label><input type="text" id="editCaloriesInput" class="dark-input" placeholder="Например: 1000"></div><button id="saveCaloriesBtn">Сохранить</button><button id="closeCaloriesModal" class="secondary" style="margin-top:12px;">Отмена</button></div></div>
 
 <script type="module">
@@ -222,11 +230,11 @@
     let currentOrderExercise = null;
     let currentEditWorkoutId = null;
     
-    let productDatabase = {};
-    let productList = [];
+    // Пользовательские продукты (загружаются из Firebase)
+    let customProducts = {};
     
-    let charts = {};
-    let weightChart = null;
+    // Встроенные продукты из отдельного файла
+    const builtinProducts = window.BUILTIN_PRODUCTS || {};
     
     // ---------- ВСПОМОГАТЕЛЬНЫЕ ----------
     function getToday() { return new Date().toISOString().slice(0, 10); }
@@ -261,10 +269,29 @@
     
     function calculate1RM(w, r, e) { return Math.round(w * (1 + r / 30) * (0.7 + (e / 10) * 0.3)); }
     
-    function saveLocal() { localStorage.setItem('fitness_data', JSON.stringify({ foodEntries, trainingHistory, customExercises, bodyWeightHistory, nextId, workoutExercisesOrder, currentWorkout, productDatabase })); }
-    function loadLocal() { let s = localStorage.getItem('fitness_data'); if (s) { let d = JSON.parse(s); foodEntries = d.foodEntries || []; trainingHistory = d.trainingHistory || []; customExercises = d.customExercises || customExercises; bodyWeightHistory = d.bodyWeightHistory || []; nextId = d.nextId || 1; workoutExercisesOrder = d.workoutExercisesOrder || []; currentWorkout = d.currentWorkout || {}; productDatabase = d.productDatabase || productDatabase; productList = Object.keys(productDatabase).map(name => ({ name, ...productDatabase[name] })); } }
+    function saveLocal() { 
+        localStorage.setItem('fitness_data', JSON.stringify({ 
+            foodEntries, trainingHistory, customExercises, bodyWeightHistory, nextId, 
+            workoutExercisesOrder, currentWorkout, customProducts 
+        })); 
+    }
     
-    // ---------- FIREBASE ----------
+    function loadLocal() { 
+        let s = localStorage.getItem('fitness_data'); 
+        if (s) { 
+            let d = JSON.parse(s); 
+            foodEntries = d.foodEntries || []; 
+            trainingHistory = d.trainingHistory || []; 
+            customExercises = d.customExercises || customExercises; 
+            bodyWeightHistory = d.bodyWeightHistory || []; 
+            nextId = d.nextId || 1; 
+            workoutExercisesOrder = d.workoutExercisesOrder || []; 
+            currentWorkout = d.currentWorkout || {}; 
+            customProducts = d.customProducts || {}; 
+        } 
+    }
+    
+    // ---------- FIREBASE СИНХРОНИЗАЦИЯ ----------
     async function syncToCloud() {
         if (!currentUser) return;
         const syncStatus = document.getElementById('syncStatus');
@@ -273,13 +300,12 @@
             const userDocRef = doc(db, "users", currentUser.uid);
             await setDoc(userDocRef, {
                 foodEntries, trainingHistory, customExercises, bodyWeightHistory, nextId,
-                workoutExercisesOrder, currentWorkout, productDatabase,
+                workoutExercisesOrder, currentWorkout, customProducts,
                 lastUpdated: new Date().toISOString()
             }, { merge: true });
             if (syncStatus) syncStatus.innerHTML = '✅ синхр.';
-            setTimeout(() => { if (syncStatus) syncStatus.innerHTML = '☁️ синхр.'; }, 2000);
-            alert('Синхронизация завершена!');
-        } catch (e) { console.error("Sync error:", e); if (syncStatus) syncStatus.innerHTML = '❌ ошибка'; alert('Ошибка синхронизации: ' + e.message); }
+                        setTimeout(() => { if (syncStatus) syncStatus.innerHTML = '☁️ синхр.'; }, 2000);
+        } catch (e) { console.error("Sync error:", e); if (syncStatus) syncStatus.innerHTML = '❌ ошибка'; }
     }
     
     async function loadFromCloud() {
@@ -296,48 +322,134 @@
                 nextId = data.nextId || 1;
                 workoutExercisesOrder = data.workoutExercisesOrder || [];
                 currentWorkout = data.currentWorkout || {};
-                productDatabase = data.productDatabase || productDatabase;
-                productList = Object.keys(productDatabase).map(name => ({ name, ...productDatabase[name] }));
-                saveLocal();
+                customProducts = data.customProducts || {};
                 renderAll();
-                alert(`Данные загружены из облака! Тренировок: ${trainingHistory.length}`);
-            } else {
-                await syncToCloud();
             }
-        } catch (e) { console.error("Load error:", e); alert('Ошибка загрузки: ' + e.message); }
+        } catch (e) { console.error("Load error:", e); }
     }
     
-    // ---------- ИМПОРТ/ЭКСПОРТ JSON ----------
-    document.getElementById('importJsonBtn')?.addEventListener('click', () => {
-        document.getElementById('importFileInput').click();
-    });
-    document.getElementById('importFileInput')?.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            try {
-                const data = JSON.parse(event.target.result);
-                foodEntries = data.foodEntries || [];
-                trainingHistory = data.trainingHistory || [];
-                customExercises = data.customExercises || customExercises;
-                bodyWeightHistory = data.bodyWeightHistory || [];
-                nextId = data.nextId || 1;
-                workoutExercisesOrder = data.workoutExercisesOrder || [];
-                currentWorkout = data.currentWorkout || {};
-                productDatabase = data.productDatabase || productDatabase;
-                productList = Object.keys(productDatabase).
-                                productList = Object.keys(productDatabase).map(name => ({ name, ...productDatabase[name] }));
-                saveLocal();
-                renderAll();
-                alert('Данные импортированы!');
-                syncToCloud();
-            } catch(e) { alert('Ошибка импорта: ' + e.message); }
-        };
-        reader.readAsText(file);
-    });
+    // ---------- ПОИСК ПРОДУКТОВ (ОБЪЕДИНЁННЫЙ) ----------
+    function getAllProducts() {
+        return { ...builtinProducts, ...customProducts };
+    }
     
-    // ---------- ОСТАЛЬНЫЕ ФУНКЦИИ (графики, рендер и т.д.) ----------
+    function findProductInDatabase(query) {
+        const lowerQuery = query.toLowerCase().trim();
+        const allProducts = getAllProducts();
+        const results = [];
+        for (let [product, nutrition] of Object.entries(allProducts)) {
+            if (product.toLowerCase().includes(lowerQuery)) {
+                results.push({ name: product, nutrition, source: builtinProducts[product] ? 'builtin' : 'custom' });
+            }
+        }
+        return results;
+    }
+    
+    // ---------- ДОБАВЛЕНИЕ ЕДЫ ----------
+    async function addFoodItem(name, weight, nutrition) {
+        const date = document.getElementById('foodDate').value || getToday();
+        const ratio = weight / 100;
+        foodEntries.push({ id: Date.now(), date, name, weight, protein: nutrition.protein * ratio, fat: nutrition.fat * ratio, carbs: nutrition.carbs * ratio, kcal: nutrition.kcal * ratio });
+        renderFoodList(); updateFoodCharts(); saveLocal(); await syncToCloud();
+    }
+    
+    // ---------- УПРАВЛЕНИЕ ПОЛЬЗОВАТЕЛЬСКИМИ ПРОДУКТАМИ ----------
+    async function addCustomProduct(name, protein, fat, carbs, kcal) {
+        if (!name) return false;
+        customProducts[name] = { protein, fat, carbs, kcal };
+        saveLocal();
+        await syncToCloud();
+        renderProductManagerLists();
+        return true;
+    }
+    
+    async function updateCustomProduct(oldName, newName, protein, fat, carbs, kcal) {
+        if (oldName !== newName) {
+            delete customProducts[oldName];
+        }
+        customProducts[newName] = { protein, fat, carbs, kcal };
+        saveLocal();
+        await syncToCloud();
+        renderProductManagerLists();
+    }
+    
+    async function deleteCustomProduct(name) {
+        delete customProducts[name];
+        saveLocal();
+        await syncToCloud();
+        renderProductManagerLists();
+    }
+    
+    // ---------- РЕНДЕР УПРАВЛЕНИЯ ПРОДУКТАМИ ----------
+    function renderProductManagerLists() {
+        // Встроенные продукты
+        const builtinContainer = document.getElementById('builtin-products-container');
+        if (builtinContainer) {
+            builtinContainer.innerHTML = '';
+            for (let [name, nutrition] of Object.entries(builtinProducts)) {
+                const div = document.createElement('div');
+                div.className = 'product-item';
+                div.innerHTML = `
+                    <div>
+                        <div class="product-name">${name}</div>
+                        <div class="product-nutrition">Б:${nutrition.protein} Ж:${nutrition.fat} У:${nutrition.carbs} Ккал:${nutrition.kcal}</div>
+                    </div>
+                    <div class="action-buttons">
+                        <span style="font-size:11px; color:#9ba1bc;">📦 встроенный</span>
+                    </div>
+                `;
+                builtinContainer.appendChild(div);
+            }
+        }
+        
+        // Пользовательские продукты
+        const customContainer = document.getElementById('custom-products-container');
+        if (customContainer) {
+            customContainer.innerHTML = '';
+            for (let [name, nutrition] of Object.entries(customProducts)) {
+                const div = document.createElement('div');
+                div.className = 'product-item';
+                div.innerHTML = `
+                    <div>
+                        <div class="product-name">${name}</div>
+                        <div class="product-nutrition">Б:${nutrition.protein} Ж:${nutrition.fat} У:${nutrition.carbs} Ккал:${nutrition.kcal}</div>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="round-edit edit-custom-product" data-name="${name}">✏️</button>
+                        <button class="round-delete delete-custom-product" data-name="${name}">✕</button>
+                    </div>
+                `;
+                customContainer.appendChild(div);
+            }
+            
+            document.querySelectorAll('.edit-custom-product').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const name = btn.dataset.name;
+                    const product = customProducts[name];
+                    if (product) {
+                        document.getElementById('editProductOldName').value = name;
+                        document.getElementById('editProductName').value = name;
+                        document.getElementById('editProductProtein').value = product.protein;
+                        document.getElementById('editProductFat').value = product.fat;
+                        document.getElementById('editProductCarbs').value = product.carbs;
+                        document.getElementById('editProductKcal').value = product.kcal;
+                        document.getElementById('editCustomProductModal').style.display = 'flex';
+                    }
+                });
+            });
+            
+            document.querySelectorAll('.delete-custom-product').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const name = btn.dataset.name;
+                    if (confirm(`Удалить продукт "${name}"?`)) {
+                        await deleteCustomProduct(name);
+                    }
+                });
+            });
+        }
+    }
+    
+    // ---------- РЕНДЕР ТРЕНИРОВОК ----------
     function generateRepOptions(s) { let o = ''; for (let i = 1; i <= 50; i++) o += `<option value="${i}" ${s == i ? 'selected' : ''}>${i}</option>`; return o; }
     function generateEffortOptions(s) { let o = ''; for (let i = 1; i <= 10; i++) o += `<option value="${i}" ${s == i ? 'selected' : ''}>${i}</option>`; return o; }
     
@@ -484,47 +596,43 @@
     });
     document.getElementById('closeWeightModal')?.addEventListener('click', () => document.getElementById('weightModal').style.display = 'none');
     
-    async function addFoodItem(name, weight, nutrition) {
-        const date = document.getElementById('foodDate').value || getToday();
-        const ratio = weight / 100;
-        foodEntries.push({ id: Date.now(), date, name, weight, protein: nutrition.protein * ratio, fat: nutrition.fat * ratio, carbs: nutrition.carbs * ratio, kcal: nutrition.kcal * ratio });
-        renderFoodList(); updateFoodCharts(); saveLocal(); await syncToCloud();
-    }
-    
-    function findProductInDatabase(query) {
-        const lowerQuery = query.toLowerCase().trim();
-        for (let [product, nutrition] of Object.entries(productDatabase)) {
-            if (product.toLowerCase() === lowerQuery) return { product, nutrition };
-        }
-        for (let [product, nutrition] of Object.entries(productDatabase)) {
-            if (lowerQuery.includes(product.toLowerCase()) || product.toLowerCase().includes(lowerQuery)) {
-                return { product, nutrition };
-            }
-        }
-        const words = lowerQuery.split(/\s+/);
-        for (let [product, nutrition] of Object.entries(productDatabase)) {
-            for (let word of words) {
-                if (word.length > 2 && (product.toLowerCase().includes(word) || word.includes(product.toLowerCase()))) {
-                    return { product, nutrition };
-                }
-            }
-        }
-        return null;
-    }
-    
     document.getElementById('searchProductBtn')?.addEventListener('click', async () => {
         let query = document.getElementById('productSearchInput').value.trim();
         if (!query) return;
-        let found = findProductInDatabase(query);
-        if (found) {
-            showWeightModal(found.product, found.nutrition);
-            document.getElementById('productSearchInput').value = '';
-        } else {
-            alert(`❌ Продукт "${query}" не найден в базе. Добавьте его через "Управление продуктами"`);
+        let results = findProductInDatabase(query);
+        let container = document.getElementById('searchResults');
+        container.innerHTML = '';
+        if (results.length === 0) {
+            container.innerHTML = '<div style="padding:12px; text-align:center;">❌ Ничего не найдено</div>';
+            return;
         }
+        results.forEach(result => {
+            let div = document.createElement('div');
+            div.className = 'compact-exercise-item';
+            div.innerHTML = `<span>${result.name}</span><button class="small-plus select-product-btn" data-name="${result.name}" data-protein="${result.nutrition.protein}" data-fat="${result.nutrition.fat}" data-carbs="${result.nutrition.carbs}" data-kcal="${result.nutrition.kcal}">+</button>`;
+            container.appendChild(div);
+        });
+        document.querySelectorAll('.select-product-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const name = btn.dataset.name;
+                const nutrition = {
+                    protein: parseFloat(btn.dataset.protein),
+                    fat: parseFloat(btn.dataset.fat),
+                    carbs: parseFloat(btn.dataset.carbs),
+                    kcal: parseFloat(btn.dataset.kcal)
+                };
+                showWeightModal(name, nutrition);
+                document.getElementById('productSearchInput').value = '';
+                container.innerHTML = '';
+            });
+        });
     });
     
-    document.getElementById('addCustomFoodBtn')?.addEventListener('click', () => document.getElementById('addFoodModal').style.display = 'flex');
+    // ---------- КНОПКИ ДОБАВЛЕНИЯ ПРОДУКТОВ ----------
+    document.getElementById('addManualFoodBtn')?.addEventListener('click', () => {
+        document.getElementById('addFoodModal').style.display = 'flex';
+    });
+    
     document.getElementById('confirmAddFoodBtn')?.addEventListener('click', async () => {
         let name = document.getElementById('manualFoodName').value.trim();
         let w = parseFloat(document.getElementById('manualFoodWeight').value);
@@ -544,79 +652,68 @@
         } else alert('Заполните название и вес');
     });
     document.getElementById('closeAddFoodModal')?.addEventListener('click', () => document.getElementById('addFoodModal').style.display = 'none');
-    document.getElementById('foodDate')?.addEventListener('change', () => renderFoodList());
     
-    // ---------- УПРАВЛЕНИЕ ПРОДУКТАМИ UI ----------
-    document.getElementById('manageProductsBtn')?.addEventListener('click', () => {
-        renderProductManagerList();
-        document.getElementById('productManagerModal').style.display = 'flex';
+    document.getElementById('addToBaseBtn')?.addEventListener('click', () => {
+        document.getElementById('addToBaseModal').style.display = 'flex';
     });
     
-    function renderProductManagerList(filter = '') {
-        const container = document.getElementById('productListContainer');
-        if (!container) return;
-        let filtered = productList;
-        if (filter) {
-            const lowerFilter = filter.toLowerCase();
-            filtered = productList.filter(p => p.name.toLowerCase().includes(lowerFilter));
-        }
-        container.innerHTML = '';
-        filtered.forEach(p => {
-            const div = document.createElement('div');
-            div.className = 'product-item';
-            div.innerHTML = `<div><div class="product-name">${p.name}</div><div class="product-nutrition">Б:${p.protein} Ж:${p.fat} У:${p.carbs} Ккал:${p.kcal}</div></div><div class="action-buttons"><button class="round-edit edit-product-btn" data-name="${p.name}">✏️</button><button class="round-delete delete-product-btn" data-name="${p.name}">✕</button></div>`;
-            container.appendChild(div);
-        });
-        document.querySelectorAll('.edit-product-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const name = btn.dataset.name;
-                const product = productDatabase[name];
-                if (product) {
-                    document.getElementById('newProductName').value = name;
-                    document.getElementById('newProductProtein').value = product.protein;
-                    document.getElementById('newProductFat').value = product.fat;
-                    document.getElementById('newProductCarbs').value = product.carbs;
-                    document.getElementById('newProductKcal').value = product.kcal;
-                }
-            });
-        });
-        document.querySelectorAll('.delete-product-btn').forEach(btn => {
-            btn.addEventListener('click', async () => {
-                const name = btn.dataset.name;
-                if (confirm(`Удалить продукт "${name}"?`)) {
-                    delete productDatabase[name];
-                    productList = Object.keys(productDatabase).map(n => ({ name: n, ...productDatabase[n] }));
-                    renderProductManagerList();
-                    await syncToCloud();
-                }
-            });
-        });
-    }
+    document.getElementById('confirmAddToBaseBtn')?.addEventListener('click', async () => {
+        let name = document.getElementById('baseProductName').value.trim();
+        let p = parseFloat(document.getElementById('baseProductProtein').value) || 0;
+        let f = parseFloat(document.getElementById('baseProductFat').value) || 0;
+        let c = parseFloat(document.getElementById('baseProductCarbs').value) || 0;
+        let kcal = parseFloat(document.getElementById('baseProductKcal').value) || (p * 4 + f * 9 + c * 4);
+        if (name) {
+            await addCustomProduct(name, p, f, c, kcal);
+            document.getElementById('addToBaseModal').style.display = 'none';
+            document.getElementById('baseProductName').value = '';
+            document.getElementById('baseProductProtein').value = '';
+            document.getElementById('baseProductFat').value = '';
+            document.getElementById('baseProductCarbs').value = '';
+            document.getElementById('baseProductKcal').value = '';
+            alert(`Продукт "${name}" добавлен в базу!`);
+        } else alert('Введите название продукта');
+    });
+    document.getElementById('closeAddToBaseModal')?.addEventListener('click', () => document.getElementById('addToBaseModal').style.display = 'none');
     
-    async function saveNewProduct() {
-        const name = document.getElementById('newProductName').value.trim();
-        const protein = parseFloat(document.getElementById('newProductProtein').value);
-        const fat = parseFloat(document.getElementById('newProductFat').value);
-        const carbs = parseFloat(document.getElementById('newProductCarbs').value);
-        const kcal = parseFloat(document.getElementById('newProductKcal').value) || (protein * 4 + fat * 9 + carbs * 4);
-        if (!name) { alert('Введите название продукта'); return; }
-        if (isNaN(protein) || isNaN(fat) || isNaN(carbs)) { alert('Введите БЖУ'); return; }
-        productDatabase[name] = { protein, fat, carbs, kcal };
-        productList = Object.keys(productDatabase).map(n => ({ name: n, ...productDatabase[n] }));
-        renderProductManagerList();
-        document.getElementById('newProductName').value = '';
-        document.getElementById('newProductProtein').value = '';
-        document.getElementById('newProductFat').value = '';
-        document.getElementById('newProductCarbs').value = '';
-        document.getElementById('newProductKcal').value = '';
-        await syncToCloud();
-        alert(`Продукт "${name}" добавлен!`);
-    }
+    document.getElementById('manageProductsBtn')?.addEventListener('click', () => {
+        renderProductManagerLists();
+        document.getElementById('productManagerModal').style.display = 'flex';
+    });
+    document.getElementById('closeProductManagerBtn')?.addEventListener('click', () => document.getElementById('productManagerModal').style.display = 'none');
     
-    document.getElementById('saveNewProductBtn')?.addEventListener('click', async () => { await saveNewProduct(); });
-    document.getElementById('productManagerSearchBtn')?.addEventListener('click', () => { renderProductManagerList(document.getElementById('productManagerSearch').value); });
-    document.getElementById('productManagerSearch')?.addEventListener('input', (e) => { renderProductManagerList(e.target.value); });
-    document.getElementById('closeProductManagerBtn')?.addEventListener('click', () => { document.getElementById('productManagerModal').style.display = 'none'; });
+    document.getElementById('addCustomProductFromManagerBtn')?.addEventListener('click', () => {
+        document.getElementById('productManagerModal').style.display = 'none';
+        document.getElementById('addToBaseModal').style.display = 'flex';
+    });
+    
+    document.getElementById('saveEditedProductBtn')?.addEventListener('click', async () => {
+        const oldName = document.getElementById('editProductOldName').value;
+        const newName = document.getElementById('editProductName').value.trim();
+        const protein = parseFloat(document.getElementById('editProductProtein').value) || 0;
+        const fat = parseFloat(document.getElementById('editProductFat').value) || 0;
+        const carbs = parseFloat(document.getElementById('editProductCarbs').value) || 0;
+        const kcal = parseFloat(document.getElementById('editProductKcal').value) || (protein * 4 + fat * 9 + carbs * 4);
+        if (newName) {
+            await updateCustomProduct(oldName, newName, protein, fat, carbs, kcal);
+            document.getElementById('editCustomProductModal').style.display = 'none';
+            alert(`Продукт "${newName}" обновлён!`);
+        } else alert('Введите название');
+    });
+    document.getElementById('closeEditProductModal')?.addEventListener('click', () => document.getElementById('editCustomProductModal').style.display = 'none');
+    
+    // ---------- ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК ПРОДУКТОВ ----------
+    document.querySelectorAll('.products-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.products-tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const tab = btn.dataset.productsTab;
+            document.getElementById('builtin-products-container').style.display = tab === 'builtin' ? 'block' : 'none';
+            document.getElementById('custom-products-container').style.display = tab === 'custom' ? 'block' : 'none';
+        });
+    });
+    
+    document.getElementById('foodDate')?.addEventListener('change', () => renderFoodList());
     
     // ---------- ГРАФИКИ ----------
     function updateProgressChart() {
@@ -647,6 +744,7 @@
         else { ctx.fillStyle = '#1e2332'; ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height); ctx.fillStyle = '#9ba1bc'; ctx.fillText('Нет данных', ctx.canvas.width / 2, ctx.canvas.height / 2); }
     }
     
+    let charts = {};
     function updateFoodCharts() {
         let grouped = {};
         foodEntries.forEach(f => { if (!grouped[f.date]) grouped[f.date] = { kcal: 0, protein: 0, fat: 0, carbs: 0 }; grouped[f.date].kcal += f.kcal; grouped[f.date].protein += f.protein; grouped[f.date].fat += f.fat; grouped[f.date].carbs += f.carbs; });
@@ -666,6 +764,7 @@
         }
     }
     
+    let weightChart = null;
     function updateWeightChart() {
         let sorted = [...bodyWeightHistory].sort((a, b) => new Date(a.date) - new Date(b.date));
         let ctx = document.getElementById('weightChart')?.getContext('2d');
@@ -704,9 +803,8 @@
         } else alert('Введите дату и вес');
     });
     
-    // ---------- ИСТОРИЯ ТРЕНИРОВОК ----------
+    // ---------- ИСТОРИЯ ----------
     let openWorkoutDays = new Set();
-    
     function toggleWorkoutDay(date) {
         if (openWorkoutDays.has(date)) openWorkoutDays.delete(date);
         else openWorkoutDays.add(date);
@@ -729,13 +827,14 @@
             const contentDiv = dayDiv.querySelector('.workout-history-content');
             grouped[date].forEach(w => {
                 let setsHtml = '<div class="history-sets-list">';
-                w.sets.forEach(s => { setsHtml += `<div class="history-set-item">▪️ ${s.weightType === 'bw' ? 'Свой вес' : s.weight + ' кг'} × ${s.reps} (💪${s.effort})</div>`; });
+                               w.sets.forEach(s => { setsHtml += `<div class="history-set-item">▪️ ${s.weightType === 'bw' ? 'Свой вес' : s.weight + ' кг'} × ${s.reps} (💪${s.effort})</div>`; });
                 setsHtml += '</div>';
                 let exDiv = document.createElement('div'); exDiv.className = 'history-exercise';
                 exDiv.innerHTML = `<div style="display:flex;justify-content:space-between;"><b>🏋️ ${w.exercise}</b><button class="round-delete delete-workout-btn" data-id="${w.id}">🗑</button></div>${setsHtml}`;
                 contentDiv.appendChild(exDiv);
             });
         }
+        
         document.querySelectorAll('.history-day-header').forEach(header => {
             header.addEventListener('click', (e) => {
                 if (e.target.classList.contains('edit-calories-btn') || e.target.classList.contains('delete-day-btn') || e.target.classList.contains('delete-workout-btn')) return;
@@ -743,6 +842,7 @@
                 toggleWorkoutDay(date);
             });
         });
+        
         document.querySelectorAll('.edit-calories-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -754,6 +854,7 @@
                 document.getElementById('editCaloriesModal').style.display = 'flex';
             });
         });
+        
         document.querySelectorAll('.delete-day-btn').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 e.stopPropagation();
@@ -764,6 +865,7 @@
                 }
             });
         });
+        
         document.querySelectorAll('.delete-workout-btn').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 e.stopPropagation();
@@ -810,7 +912,7 @@
             const dayContainer = dayDiv.querySelector(`#food-day-${date.replace(/-/g, '')}`);
             grouped[date].forEach(f => {
                 let fDiv = document.createElement('div'); fDiv.className = 'history-exercise';
-                                fDiv.innerHTML = `<div style="display:flex;justify-content:space-between;"><b>🍽 ${f.name}</b><button class="round-delete delete-food" data-id="${f.id}">🗑</button></div><div class="history-set-item">${f.weight}г | Б:${f.protein.toFixed(1)} Ж:${f.fat.toFixed(1)} У:${f.carbs.toFixed(1)} — ${Math.round(f.kcal)} ккал</div>`;
+                fDiv.innerHTML = `<div style="display:flex;justify-content:space-between;"><b>🍽 ${f.name}</b><button class="round-delete delete-food" data-id="${f.id}">🗑</button></div><div class="history-set-item">${f.weight}г | Б:${f.protein.toFixed(1)} Ж:${f.fat.toFixed(1)} У:${f.carbs.toFixed(1)} — ${Math.round(f.kcal)} ккал</div>`;
                 dayContainer.appendChild(fDiv);
             });
         }
@@ -830,10 +932,33 @@
     
     // ---------- ИИ НАСТРОЙКИ ----------
     document.getElementById('copyJsonBtn')?.addEventListener('click', () => {
-        const exportData = { foodEntries, trainingHistory, customExercises, bodyWeightHistory, productDatabase };
+        const exportData = { foodEntries, trainingHistory, customExercises, bodyWeightHistory, customProducts };
         navigator.clipboard.writeText(JSON.stringify(exportData, null, 2)).then(() => alert('JSON скопирован'));
     });
-    document.getElementById('syncCloudBtn')?.addEventListener('click', async () => { await syncToCloud(); });
+    document.getElementById('importJsonBtn')?.addEventListener('click', () => {
+        document.getElementById('importFileInput').click();
+    });
+    document.getElementById('importFileInput')?.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const data = JSON.parse(event.target.result);
+                if (data.foodEntries) foodEntries = data.foodEntries;
+                if (data.trainingHistory) trainingHistory = data.trainingHistory;
+                if (data.customExercises) customExercises = data.customExercises;
+                if (data.bodyWeightHistory) bodyWeightHistory = data.bodyWeightHistory;
+                if (data.customProducts) customProducts = data.customProducts;
+                saveLocal();
+                renderAll();
+                alert('Данные импортированы!');
+                syncToCloud();
+            } catch(e) { alert('Ошибка импорта: ' + e.message); }
+        };
+        reader.readAsText(file);
+    });
+    document.getElementById('syncCloudBtn')?.addEventListener('click', async () => { await syncToCloud(); alert('Синхронизация завершена!'); });
     document.getElementById('smartAdviceBtn')?.addEventListener('click', () => {
         let last = {};
         trainingHistory.slice().sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(w => { if (!last[w.exercise]) last[w.exercise] = w; });
@@ -911,12 +1036,14 @@
     profileModal?.addEventListener('click', (e) => { if (e.target === profileModal) profileModal.style.display = 'none'; });
     document.getElementById('exercisePickerModal')?.addEventListener('click', (e) => { if (e.target === document.getElementById('exercisePickerModal')) document.getElementById('exercisePickerModal').style.display = 'none'; });
     document.getElementById('addFoodModal')?.addEventListener('click', (e) => { if (e.target === document.getElementById('addFoodModal')) document.getElementById('addFoodModal').style.display = 'none'; });
+    document.getElementById('addToBaseModal')?.addEventListener('click', (e) => { if (e.target === document.getElementById('addToBaseModal')) document.getElementById('addToBaseModal').style.display = 'none'; });
     document.getElementById('orderModal')?.addEventListener('click', (e) => { if (e.target === document.getElementById('orderModal')) document.getElementById('orderModal').style.display = 'none'; });
     document.getElementById('weightModal')?.addEventListener('click', (e) => { if (e.target === document.getElementById('weightModal')) document.getElementById('weightModal').style.display = 'none'; });
     document.getElementById('productManagerModal')?.addEventListener('click', (e) => { if (e.target === document.getElementById('productManagerModal')) document.getElementById('productManagerModal').style.display = 'none'; });
+    document.getElementById('editCustomProductModal')?.addEventListener('click', (e) => { if (e.target === document.getElementById('editCustomProductModal')) document.getElementById('editCustomProductModal').style.display = 'none'; });
     document.getElementById('editCaloriesModal')?.addEventListener('click', (e) => { if (e.target === document.getElementById('editCaloriesModal')) document.getElementById('editCaloriesModal').style.display = 'none'; });
 
-    // ---------- АВТОРИЗАЦИЯ (ИСПРАВЛЕНА) ----------
+    // ---------- АВТОРИЗАЦИЯ ----------
     async function handleLogin(email, password) {
         try {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
@@ -924,7 +1051,6 @@
             document.getElementById('login-page').classList.remove('active-page');
             document.getElementById('app-page').classList.add('active-page');
             document.getElementById('mainTabs').style.display = 'flex';
-            // Исправлено: проверяем существование элемента
             const userEmailSpan = document.getElementById('userEmail');
             if (userEmailSpan) userEmailSpan.innerText = currentUser.email;
             await loadFromCloud();
@@ -996,15 +1122,6 @@
     document.getElementById('foodDate').value = getToday();
     document.getElementById('workoutDate').value = getToday();
     updateWeightChart();
-    
-    // Отладка: выводим статус Firebase
-    setTimeout(() => {
-        if (window.auth && window.auth.currentUser) {
-            console.log('✅ Firebase авторизован:', window.auth.currentUser.email);
-        } else {
-            console.log('❌ Firebase не авторизован');
-        }
-    }, 2000);
 </script>
 </body>
 </html>
